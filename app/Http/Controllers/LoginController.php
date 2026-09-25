@@ -16,6 +16,9 @@ class LoginController extends Controller
         if (Auth::guard('employee')->check()) {
             return redirect()->route('employee.dashboard');
         }
+        if (Auth::guard('manager')->check()) {
+            return redirect()->route('manager.dashboard');
+        }
 
         return view('auth.login');
     }
@@ -42,6 +45,12 @@ class LoginController extends Controller
             return redirect()->route('employee.dashboard');
         }
 
+        if (! $isAdminName && Auth::guard('manager')->attempt($credentials + ['is_active' => true])) {
+            $request->session()->regenerate();
+
+            return redirect()->route('manager.dashboard');
+        }
+
         return back()->withInput($request->only('username'))
             ->withErrors(['username' => 'Invalid username or password.']);
     }
@@ -49,6 +58,7 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         Auth::guard('employee')->logout();
+        Auth::guard('manager')->logout();
         $request->session()->forget('tracker_admin');
         $request->session()->regenerate();
 

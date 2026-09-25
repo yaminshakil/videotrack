@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\Employee;
+use App\Models\Manager;
 use App\Models\Rate;
 use App\Models\Topic;
+use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -35,7 +37,7 @@ class EmployeeController extends Controller
     {
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:120'],
-            'username' => ['required', 'string', 'max:60', 'unique:employees,username', Rule::notIn([config('tracker.admin_username')])],
+            'username' => ['required', 'string', 'max:60', 'unique:employees,username', Rule::notIn([config('tracker.admin_username')]), $this->notAManagerUsername()],
             'password' => ['required', 'string', 'min:6'],
         ], ['required' => 'Name, username and password are required.', 'password.min' => 'Password must be at least 6 characters.']);
 
@@ -48,7 +50,7 @@ class EmployeeController extends Controller
     {
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:120'],
-            'username' => ['required', 'string', 'max:60', Rule::unique('employees', 'username')->ignore($employee->id), Rule::notIn([config('tracker.admin_username')])],
+            'username' => ['required', 'string', 'max:60', Rule::unique('employees', 'username')->ignore($employee->id), Rule::notIn([config('tracker.admin_username')]), $this->notAManagerUsername()],
             'password' => ['nullable', 'string', 'min:6'],
         ], ['required' => 'Name and username are required.', 'password.min' => 'Password must be at least 6 characters.']);
 
@@ -99,5 +101,14 @@ class EmployeeController extends Controller
         $topic->save();
 
         return back()->with('ok', 'Assignment updated.');
+    }
+
+    private function notAManagerUsername(): Closure
+    {
+        return function (string $attribute, mixed $value, $fail) {
+            if (Manager::where('username', $value)->exists()) {
+                $fail('That username is already used by a manager.');
+            }
+        };
     }
 }

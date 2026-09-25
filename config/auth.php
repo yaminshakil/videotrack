@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Employee;
+use App\Models\Manager;
 use App\Models\User;
 
 return [
@@ -46,6 +48,10 @@ return [
             'driver' => 'session',
             'provider' => 'employees',
         ],
+        'manager' => [
+            'driver' => 'session',
+            'provider' => 'managers',
+        ],
     ],
 
     /*
@@ -73,7 +79,12 @@ return [
 
         'employees' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Employee::class,
+            'model' => Employee::class,
+        ],
+
+        'managers' => [
+            'driver' => 'eloquent',
+            'model' => Manager::class,
         ],
 
         // 'users' => [

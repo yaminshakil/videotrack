@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\EmployeeController as AdminEmployeeController;
+use App\Http\Controllers\Admin\ManagerController as AdminManagerController;
 use App\Http\Controllers\Admin\PayrollController as AdminPayrollController;
 use App\Http\Controllers\Admin\TopicController as AdminTopicController;
 use App\Http\Controllers\EmployeePortalController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ManagerPortalController;
 use App\Http\Controllers\TrackerController;
 use App\Models\Channel;
 use App\Models\Topic;
@@ -20,8 +22,8 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 Route::get('/', function () {
     return view('landing', [
         'channels' => Channel::withCount('topics')->orderBy('sort_order')->get(),
-        'total'    => Topic::count(),
-        'done'     => Topic::where('is_done', true)->count(),
+        'total' => Topic::count(),
+        'done' => Topic::where('is_done', true)->count(),
     ]);
 })->name('home');
 
@@ -53,6 +55,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('payroll', [AdminPayrollController::class, 'index'])->name('payroll');
     Route::post('payroll/payments', [AdminPayrollController::class, 'store'])->name('payments.store');
     Route::delete('payments/{payment}', [AdminPayrollController::class, 'destroy'])->name('payments.destroy');
+
+    Route::get('managers', [AdminManagerController::class, 'index'])->name('managers.index');
+    Route::post('managers', [AdminManagerController::class, 'store'])->name('managers.store');
+    Route::put('managers/{manager}', [AdminManagerController::class, 'update'])->name('managers.update');
+    Route::delete('managers/{manager}', [AdminManagerController::class, 'destroy'])->name('managers.destroy');
 });
 
 // ---- YouTube title preview. Deliberately stateless (no session/cookies): it is called via AJAX while an
@@ -79,4 +86,15 @@ Route::prefix('employee')->name('employee.')->middleware(['auth:employee', 'empl
     Route::post('topics/{topic}/video', [EmployeePortalController::class, 'saveVideo'])->name('video.save');
     Route::delete('topics/{topic}/video', [EmployeePortalController::class, 'removeVideo'])->name('video.remove');
     Route::post('topics/{topic}/toggle', [EmployeePortalController::class, 'toggle'])->name('toggle');
+});
+
+// ---- Manager portal
+Route::prefix('manager')->name('manager.')->middleware(['auth:manager', 'manager.active'])->group(function () {
+    Route::get('/', [ManagerPortalController::class, 'dashboard'])->name('dashboard');
+    Route::get('topics', [ManagerPortalController::class, 'topics'])->name('topics');
+    Route::post('topics', [ManagerPortalController::class, 'storeTopic'])->name('topics.store');
+    Route::put('topics/{topic}', [ManagerPortalController::class, 'updateTopic'])->name('topics.update');
+    Route::delete('topics/{topic}', [ManagerPortalController::class, 'destroyTopic'])->name('topics.destroy');
+    Route::put('topics/{topic}/assign', [ManagerPortalController::class, 'assign'])->name('topics.assign');
+    Route::get('earnings', [ManagerPortalController::class, 'earnings'])->name('earnings');
 });

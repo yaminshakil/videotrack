@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@if ($isAdmin || $employee)
+@if ($isAdmin || $employee || $manager)
   @section('sidebar', 1)
 @endif
 
@@ -12,6 +12,9 @@
   @elseif ($employee)
     @include('employee._nav')
     @include('admin._topbar', ['topbarName' => $employee->name, 'topbarRole' => 'Employee'])
+  @elseif ($manager)
+    @include('manager._nav')
+    @include('admin._topbar', ['topbarName' => $manager->name, 'topbarRole' => 'Manager'])
   @endif
 
   <header>
@@ -20,7 +23,7 @@
       <p class="sub">Track topic coverage for <b>How To Windows</b>, <b>World of Linux</b>, <b>Web Tech Knowledge</b> and <b>AI Tech</b>.</p>
       <p class="sub" style="margin-top:6px">
         <a href="{{ route('home') }}" style="color:var(--muted);text-decoration:none;font-size:13px">← Home</a>
-        @if (! $isAdmin && ! $employee)
+        @if (! $isAdmin && ! $employee && ! $manager)
           &nbsp;·&nbsp;
           <a href="{{ route('login') }}" style="color:var(--muted);text-decoration:none;font-size:13px">🔐 Sign in</a>
         @endif

@@ -7,6 +7,7 @@
       <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'on' : '' }}">📊 <span>Dashboard</span></a>
       <a href="{{ route('admin.topics.index') }}" class="{{ request()->routeIs('admin.topics.*') ? 'on' : '' }}">🛠️ <span>Topics</span></a>
       <a href="{{ route('admin.employees.index') }}" class="{{ request()->routeIs('admin.employees.*') ? 'on' : '' }}">👥 <span>Employees</span></a>
+      <a href="{{ route('admin.managers.index') }}" class="{{ request()->routeIs('admin.managers.*') ? 'on' : '' }}">🛡️ <span>Managers</span></a>
       <a href="{{ route('admin.payroll') }}" class="{{ request()->routeIs('admin.payroll') ? 'on' : '' }}">💰 <span>Payroll</span></a>
     </div>
   </div>

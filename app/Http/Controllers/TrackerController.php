@@ -12,36 +12,52 @@ class TrackerController extends Controller
 {
     public function index(Request $request)
     {
-        $q       = trim((string) $request->query('q', ''));
+        $q = trim((string) $request->query('q', ''));
         $channel = (string) $request->query('channel', 'all');
-        $status  = (string) $request->query('status', 'all');
+        $status = (string) $request->query('status', 'all');
+
+        $employee = Auth::guard('employee')->user();
+        $manager = Auth::guard('manager')->user();
+        $channelIds = $manager?->channels()->pluck('channels.id');
 
         $topics = Topic::ordered()
             ->with('channel')
-            ->when($q !== '', fn ($query) => $query->where('topics.title', 'like', '%' . $q . '%'))
+            ->when($manager, fn ($query) => $query->whereIn('channels.id', $channelIds))
+            ->when($employee, fn ($query) => $query->where('topics.assigned_to', $employee->id))
+            ->when($q !== '', fn ($query) => $query->where('topics.title', 'like', '%'.$q.'%'))
             ->when($channel !== 'all', fn ($query) => $query->where('channels.slug', $channel))
             ->when($status === 'done', fn ($query) => $query->where('topics.is_done', true))
             ->when($status === 'pending', fn ($query) => $query->where('topics.is_done', false))
             ->get();
 
         // Group by channel + category (section headers).
-        $groups = $topics->groupBy(fn (Topic $t) => $t->channel_id . '|' . $t->category)
+        $groups = $topics->groupBy(fn (Topic $t) => $t->channel_id.'|'.$t->category)
             ->map(fn ($items, $key) => [
-                'key'      => sha1($key),
-                'channel'  => $items->first()->channel,
+                'key' => sha1($key),
+                'channel' => $items->first()->channel,
                 'category' => $items->first()->category,
-                'items'    => $items,
+                'items' => $items,
             ]);
 
+        $scope = match (true) {
+            (bool) $manager => fn ($query) => $query->whereIn('channel_id', $channelIds),
+            (bool) $employee => fn ($query) => $query->where('assigned_to', $employee->id),
+            default => null,
+        };
+
         return view('tracker.index', [
-            'groups'   => $groups,
-            'channels' => Channel::orderBy('sort_order')->get(),
-            'stats'    => $this->stats(),
-            'q'        => $q,
-            'channel'  => $channel,
-            'status'   => $status,
-            'isAdmin'  => (bool) $request->session()->get('tracker_admin'),
-            'employee' => Auth::guard('employee')->user(),
+            'groups' => $groups,
+            'channels' => Channel::orderBy('sort_order')
+                ->when($manager, fn ($query) => $query->whereIn('id', $channelIds))
+                ->when($employee, fn ($query) => $query->whereIn('id', Topic::where('assigned_to', $employee->id)->pluck('channel_id')))
+                ->get(),
+            'stats' => $this->stats($scope),
+            'q' => $q,
+            'channel' => $channel,
+            'status' => $status,
+            'isAdmin' => (bool) $request->session()->get('tracker_admin'),
+            'employee' => $employee,
+            'manager' => $manager,
         ]);
     }
 
@@ -50,22 +66,23 @@ class TrackerController extends Controller
         $topic->toggleDone();
 
         return response()->json([
-            'ok'      => true,
+            'ok' => true,
             'is_done' => $topic->is_done,
-            'stats'   => $this->stats(),
+            'stats' => $this->stats(),
         ]);
     }
 
-    private function stats(): array
+    private function stats(?callable $scope = null): array
     {
-        $total     = Topic::count();
-        $done      = Topic::where('is_done', true)->count();
+        $base = fn () => Topic::query()->when($scope, fn ($query) => $scope($query));
+        $total = $base()->count();
+        $done = $base()->where('is_done', true)->count();
 
         return [
-            'total'     => $total,
-            'done'      => $done,
+            'total' => $total,
+            'done' => $done,
             'remaining' => $total - $done,
-            'percent'   => $total ? (int) round($done / $total * 100) : 0,
+            'percent' => $total ? (int) round($done / $total * 100) : 0,
         ];
     }
 }

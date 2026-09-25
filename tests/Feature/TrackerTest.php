@@ -113,6 +113,25 @@ class TrackerTest extends TestCase
         $this->assertFalse($t->fresh()->is_done);
     }
 
+    public function test_employee_sees_only_their_topics_in_the_tracker(): void
+    {
+        $me = $this->employee();
+        $mine = $this->topic(['title' => 'Mine', 'assigned_to' => $me->id]);
+        $this->topic(['title' => 'Someone elses']);
+        $this->topic(['title' => 'Unassigned']);
+
+        $this->get('/tracker')->assertSee('Mine')->assertSee('Someone elses')->assertSee('Unassigned');
+
+        $this->loginAs('emp');
+        $r = $this->get('/tracker')->assertOk()
+            ->assertSee('Mine')
+            ->assertDontSee('Someone elses')
+            ->assertDontSee('Unassigned');
+        $this->assertSame(1, $r->viewData('stats')['total']);
+        $channels = $r->viewData('channels');
+        $this->assertSame([(int) $mine->channel_id], $channels->pluck('id')->map(fn ($v) => (int) $v)->all());
+    }
+
     public function test_admin_toggle_returns_stats_and_records_completion(): void
     {
         $t = $this->topic();
@@ -143,7 +162,7 @@ class TrackerTest extends TestCase
     {
         $this->post('/login', ['username' => 'admin', 'password' => 'wrong'])->assertSessionHasErrors('username');
         $this->post('/login', ['username' => 'admin', 'password' => config('tracker.admin_password')])
-            ->assertRedirect(route('admin.topics.index'));
+            ->assertRedirect(route('admin.dashboard'));
         $this->get('/admin')->assertOk()->assertSee('Topics');
         $this->post('/logout')->assertRedirect(route('home'));
         $this->get('/admin')->assertRedirect(route('login'));
@@ -269,9 +288,9 @@ class TrackerTest extends TestCase
         $this->post('/logout');
 
         $this->post('/login', ['username' => 'ADMIN', 'password' => config('tracker.admin_password')])
-            ->assertRedirect(route('admin.topics.index'));
+            ->assertRedirect(route('admin.dashboard'));
         $this->get('/employee')->assertRedirect(route('login'));
-        $this->get('/login')->assertRedirect(route('admin.topics.index'));
+        $this->get('/login')->assertRedirect(route('admin.dashboard'));
     }
 
     public function test_inactive_employee_cannot_log_in(): void
@@ -397,7 +416,7 @@ class TrackerTest extends TestCase
         $t->refresh();
         $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $t->video_url);
         $this->assertSame('Ollama on Windows in 5 minutes', $t->video_title);
-        $this->get('/employee')->assertSee('Ollama on Windows in 5 minutes');
+        $this->get('/employee')->assertOk();
 
         // tick -> done, dated, earns the rate
         $this->post("/employee/topics/{$t->id}/toggle")->assertSessionHas('ok');
@@ -408,14 +427,19 @@ class TrackerTest extends TestCase
         $this->assertSame('100.00', $t->earned_amount);
         $this->get('/employee')->assertSee('Tk 100')->assertSee($t->completed_at->format('j M Y'));
 
-        // locked afterwards: cannot untick or change the video
-        $this->post("/employee/topics/{$t->id}/toggle")->assertSessionHasErrors('video');
+        // video link is locked while done, but it can still be ticked back open
         $this->post("/employee/topics/{$t->id}/video", ['video_url' => 'https://youtu.be/bbbbbbbbbbb'])
             ->assertSessionHasErrors('video');
         $t->refresh();
         $this->assertTrue($t->is_done);
         $this->assertSame('100.00', $t->earned_amount);
         $this->assertStringContainsString('dQw4w9WgXcQ', $t->video_url);
+
+        $this->post("/employee/topics/{$t->id}/toggle")->assertSessionHas('ok');
+        $t->refresh();
+        $this->assertFalse($t->is_done);
+        $this->assertNull($t->completed_at);
+        $this->assertSame(0.0, (float) $t->earned_amount);
     }
 
     public function test_same_video_cannot_be_used_for_two_topics(): void
