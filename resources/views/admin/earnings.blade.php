@@ -13,7 +13,7 @@
   <div class="dhead dash-head">
     <div>
       <h1>💰 Earnings</h1>
-      <p class="sub">What every employee earned, and which channel it came from. A figure is locked in when a topic is completed, so changing a pay rate later never rewrites past earnings.</p>
+      <p class="sub">What every creator earned, and which channel it came from. A figure is locked in when a topic is completed, so changing a pay rate later never rewrites past earnings.</p>
     </div>
   </div>
 
@@ -49,7 +49,7 @@
       @unless($allTime)<div class="s">{{ $report['allDone'] }} all time</div>@endunless
     </div>
     <div class="dash-card">
-      <div class="l">Employees paid</div>
+      <div class="l">Creators paid</div>
       <div class="v">{{ $report['rows']->count() }}</div>
     </div>
     <div class="dash-card">

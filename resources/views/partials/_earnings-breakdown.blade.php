@@ -1,9 +1,9 @@
 @php use App\Support\Money; @endphp
 
 {{--
-  One employee's earnings broken down by day / week / month / year. Included from
+  One creator's earnings broken down by day / week / month / year. Included from
   the admin and manager per-employee earnings pages, so the figures always read the
-  same way wherever they are looked at from. (The employee's own dashboard predates
+  same way wherever they are looked at from. (The creator's own dashboard predates
   this partial and keeps its own copy of the same markup, styled together with the
   rest of that page.)
 

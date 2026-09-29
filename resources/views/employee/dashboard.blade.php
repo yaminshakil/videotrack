@@ -55,7 +55,7 @@
 @section('body')
 <div class="wrap">
   @include('employee._nav')
-  @include('admin._topbar', ['topbarName' => $employee->name, 'topbarRole' => 'Employee'])
+  @include('admin._topbar', ['topbarName' => $employee->name, 'topbarRole' => 'Creator'])
 
   <div class="dhead">
     <div>

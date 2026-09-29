@@ -20,7 +20,7 @@
   @include('account._form', [
       'action' => route('admin.account.update'),
       'heading' => 'Sign-in details',
-      'tagline' => 'Used to sign in to this panel. Nothing here is shared with employees or managers.',
+      'tagline' => 'Used to sign in to this panel. Nothing here is shared with creators or managers.',
       'roleLabel' => 'Administrator',
       'user' => $admin,
   ])

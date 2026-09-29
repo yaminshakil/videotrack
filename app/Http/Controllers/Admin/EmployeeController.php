@@ -41,7 +41,7 @@ class EmployeeController extends Controller
 
         Employee::create($data);
 
-        return back()->with('ok', 'Employee added.');
+        return back()->with('ok', 'Creator added.');
     }
 
     public function update(Request $request, Employee $employee)
@@ -60,7 +60,7 @@ class EmployeeController extends Controller
         }
         $employee->save();
 
-        return back()->with('ok', 'Employee updated.');
+        return back()->with('ok', 'Creator updated.');
     }
 
     public function destroy(Employee $employee)
@@ -68,7 +68,7 @@ class EmployeeController extends Controller
         // FK rules null out topics.assigned_to and cascade-delete rates.
         $employee->delete();
 
-        return back()->with('ok', 'Employee deleted.');
+        return back()->with('ok', 'Creator deleted.');
     }
 
     public function saveRates(Request $request)

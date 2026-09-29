@@ -1,4 +1,4 @@
-// Shared behaviour for the employee "My Topics" and "Custom Topics" pages.
+// Shared behaviour for the creator "My Topics" and "Custom Topics" pages.
 (function () {
   // Per-channel topic search
   document.querySelectorAll('.ch-search-input').forEach(input => {

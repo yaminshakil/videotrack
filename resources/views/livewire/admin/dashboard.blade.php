@@ -29,7 +29,7 @@
       <div class="top">
         <div>
           <div class="val">{{ $stats['employees']['value'] }}</div>
-          <div class="lbl">Total Employees</div>
+          <div class="lbl">Total Creators</div>
         </div>
         <div class="icon tone-{{ $stats['employees']['tone'] }}">{{ $stats['employees']['icon'] }}</div>
       </div>
@@ -139,7 +139,7 @@
       <section class="dash-block">
         <div class="dash-block-head"><h2>⚡ Quick actions</h2></div>
         <div class="chans">
-          <a class="chancard-link" href="{{ route('admin.employees.index') }}">👥 Employees &amp; rates</a>
+          <a class="chancard-link" href="{{ route('admin.employees.index') }}">👥 Creators &amp; rates</a>
           <a class="chancard-link" href="{{ route('admin.managers.index') }}">🛡️ Managers</a>
           <a class="chancard-link" href="{{ route('admin.earnings') }}">📈 Earnings by channel</a>
           <a class="chancard-link" href="{{ route('admin.payroll') }}">💰 Payroll</a>

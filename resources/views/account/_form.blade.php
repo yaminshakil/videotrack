@@ -39,7 +39,7 @@
       <label for="acc-username">Username</label>
       <input id="acc-username" type="text" name="username" value="{{ old('username', $user->username) }}" required
              minlength="3" maxlength="60" autocomplete="username" autocapitalize="none" spellcheck="false">
-      <p class="hint">This is what you type on the sign-in page. It has to be different from every employee and manager username.</p>
+      <p class="hint">This is what you type on the sign-in page. It has to be different from every creator and manager username.</p>
     </div>
 
     <div class="full">

@@ -1,4 +1,4 @@
-{{-- Pay-rate grid (channel x employee). Livewire version of partials/_rate-editor.
+{{-- Pay-rate grid (channel x creator). Livewire version of partials/_rate-editor.
      The cells only enter component state once the editor is opened, so a closed
      grid costs nothing on every other request. --}}
 <div class="block">
@@ -13,7 +13,7 @@
       @if ($channels->isEmpty())
         <p class="muted">There are no channels yet, so there is nothing to set a rate for.</p>
       @elseif ($employees->isEmpty())
-        <p class="muted">There are no active employees yet. Add one on the Employees page first.</p>
+        <p class="muted">There are no active creators yet. Add one on the Creators page first.</p>
       @else
         <form wire:submit="save">
           <div class="tscroll">

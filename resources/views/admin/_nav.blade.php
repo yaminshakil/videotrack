@@ -16,7 +16,7 @@
         </div>
       </details>
 
-      <a href="{{ route('admin.employees.index') }}" class="{{ request()->routeIs('admin.employees.*') ? 'on' : '' }}">👥 <span>Employees</span></a>
+      <a href="{{ route('admin.employees.index') }}" class="{{ request()->routeIs('admin.employees.*') ? 'on' : '' }}">👥 <span>Creators</span></a>
       <a href="{{ route('admin.managers.index') }}" class="{{ request()->routeIs('admin.managers.*') ? 'on' : '' }}">🛡️ <span>Managers</span></a>
       <a href="{{ route('admin.earnings') }}" class="{{ request()->routeIs('admin.earnings') ? 'on' : '' }}">📈 <span>Earnings</span></a>
       <a href="{{ route('admin.payroll') }}" class="{{ request()->routeIs('admin.payroll') ? 'on' : '' }}">💰 <span>Payroll</span></a>

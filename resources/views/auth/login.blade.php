@@ -22,7 +22,7 @@
 <form class="card" method="post" action="{{ route('login.submit') }}">
   @csrf
   <h1>🔐 Sign in</h1>
-  <p class="sub">Admins and employees sign in here — you'll be taken to the right place automatically.</p>
+  <p class="sub">Admins and creators sign in here — you'll be taken to the right place automatically.</p>
   @error('username')<div class="err">{{ $message }}</div>@enderror
   <input type="text" name="username" placeholder="Username" value="{{ old('username') }}" required autofocus autocomplete="username">
   <input type="password" name="password" placeholder="Password" required autocomplete="current-password">

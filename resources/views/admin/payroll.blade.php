@@ -112,7 +112,7 @@
   @include('admin._topbar')
 
   <h1>💰 Payroll</h1>
-  <div class="tagline">Pay each employee monthly, for the 1st to the last day of the month. Earnings are locked in when a topic is completed, so changing a rate later never alters a past month. Bonuses add on top of those earnings and are paid out the same way.</div>
+  <div class="tagline">Pay each creator monthly, for the 1st to the last day of the month. Earnings are locked in when a topic is completed, so changing a rate later never alters a past month. Bonuses add on top of those earnings and are paid out the same way.</div>
 
   @include('admin._messages')
 
@@ -146,10 +146,10 @@
   @endif
 
   @if ($rows->isEmpty())
-    <p class="muted">No employees yet. <a class="vl" href="{{ route('admin.employees.index') }}">Add one</a>.</p>
+    <p class="muted">No creators yet. <a class="vl" href="{{ route('admin.employees.index') }}">Add one</a>.</p>
   @endif
 
-  {{-- One card per employee --}}
+  {{-- One card per creator --}}
   @foreach ($rows as $r)
     @php $e = $r['employee']; @endphp
     <section class="emp" id="emp-{{ $e->id }}">

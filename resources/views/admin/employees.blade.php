@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Employees & Rates — Admin')
+@section('title', 'Creators & Rates — Admin')
 @section('sidebar', 1)
 
 @push('styles')
@@ -61,17 +61,17 @@
 
   <div class="head">
     <div>
-      <h1>👥 Employees &amp; Rates</h1>
-      <div class="tagline">Create employees, set what each channel pays per completed topic, and assign topics. Earnings are on the <a href="{{ route('admin.payroll') }}">Payroll</a> page.</div>
+      <h1>👥 Creators &amp; Rates</h1>
+      <div class="tagline">Create creators, set what each channel pays per completed topic, and assign topics. Earnings are on the <a href="{{ route('admin.payroll') }}">Payroll</a> page.</div>
     </div>
   </div>
 
   @include('admin._messages')
 
-  <!-- 1. Add / edit employees -->
+  <!-- 1. Add / edit creators -->
   <form class="block" method="post" action="{{ route('admin.employees.store') }}" autocomplete="off">
     @csrf
-    <h2>Add employee</h2>
+    <h2>Add creator</h2>
     <div class="grid">
       <div><label>Full name</label><input type="text" name="name" required placeholder="e.g. Rahim" autocomplete="off"></div>
       <div><label>Username (login)</label><input type="text" name="username" required placeholder="rahim" autocomplete="off"></div>
@@ -83,7 +83,7 @@
 
   @if ($employees->isNotEmpty())
   <div class="block">
-    <h2>Employees</h2>
+    <h2>Creators</h2>
     <div class="tscroll"><table class="etable">
       <tr><th>Name</th><th>Username</th><th>Active</th><th>Password</th><th></th></tr>
       @foreach ($employees as $e)
@@ -113,7 +113,7 @@ Their earnings history AND payment records are deleted too, so you will lose the
   </div>
   @endif
 
-  <!-- 2. Rate matrix (channel x employee) -->
+  <!-- 2. Rate matrix (channel x creator) -->
   @include('partials._rate-editor', [
     'rateAction' => route('admin.rates.save'),
     'rateChannels' => $channels,
@@ -144,7 +144,7 @@ Their earnings history AND payment records are deleted too, so you will lose the
             @endforeach
           </select>
         @else
-          <span class="muted" style="font-size:13px">Add an employee first.</span>
+          <span class="muted" style="font-size:13px">Add a creator first.</span>
         @endif
       </form>
     @endforeach

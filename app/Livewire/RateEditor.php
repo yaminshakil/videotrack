@@ -32,9 +32,9 @@ class RateEditor extends Component
 
     public bool $open = false;
 
-    public string $title = 'Pay rates (channel × employee)';
+    public string $title = 'Pay rates (channel × creator)';
 
-    public string $hint = 'What an employee earns for completing one topic in each channel. It is used the next time a topic is completed — earnings already recorded keep the rate they were completed at.';
+    public string $hint = 'What a creator earns for completing one topic in each channel. It is used the next time a topic is completed — earnings already recorded keep the rate they were completed at.';
 
     /**
      * @param  \Illuminate\Support\Collection<int, Channel>|null  $channels  the caller's channels, or null for the admin (all of them)

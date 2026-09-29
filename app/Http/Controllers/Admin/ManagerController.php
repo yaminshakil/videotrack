@@ -76,7 +76,7 @@ class ManagerController extends Controller
                 new NotAdminUsername,
                 function (string $attribute, mixed $value, $fail) {
                     if (Employee::whereRaw('LOWER(username) = ?', [mb_strtolower((string) $value)])->exists()) {
-                        $fail('That username is already used by an employee.');
+                        $fail('That username is already used by a creator.');
                     }
                 },
             ],

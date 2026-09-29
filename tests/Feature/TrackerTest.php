@@ -312,7 +312,7 @@ class TrackerTest extends TestCase
         $this->topic(['channel_id' => $win->id, 'assigned_to' => $bob->id])->markDone();
 
         $r = $this->admin()->get('/admin/earnings?month=2026-09')->assertOk();
-        $r->assertSee('Earnings by employee and channel')
+        $r->assertSee('Earnings by creator and channel')
             ->assertSee('Tk 100')   // Alice, windows
             ->assertSee('Tk 50')    // Alice, linux
             ->assertSee('Tk 30');   // Bob, windows

@@ -1,19 +1,19 @@
-{{-- Pay-rate matrix (channel x employee), used by the employees page and both dashboards.
+{{-- Pay-rate matrix (channel x creator), used by the creators page and both dashboards.
      Expects $rateAction, $rateChannels, $rateEmployees, $rates, and optionally
      $rateTitle / $rateHint / $rateSubmit. --}}
 <form class="{{ $rateClass ?? 'block rate-editor' }}" method="post" action="{{ $rateAction }}">
   @csrf
   @method('PUT')
 
-  <h2>{{ $rateTitle ?? 'Pay rate per completed topic (per channel × employee)' }}</h2>
+  <h2>{{ $rateTitle ?? 'Pay rate per completed topic (per channel × creator)' }}</h2>
   <p class="muted rate-hint">
-    {{ $rateHint ?? 'When an employee completes a topic in a channel, they earn this amount. Leave 0 if no rate.' }}
+    {{ $rateHint ?? 'When a creator completes a topic in a channel, they earn this amount. Leave 0 if no rate.' }}
   </p>
 
   @if ($rateChannels->isEmpty())
     <p class="muted">There are no channels yet, so there is nothing to set a rate for.</p>
   @elseif ($rateEmployees->isEmpty())
-    <p class="muted">There are no active employees yet. Add one on the Employees page first.</p>
+    <p class="muted">There are no active creators yet. Add one on the Creators page first.</p>
   @else
     <div class="tscroll">
       <table class="ratetable">

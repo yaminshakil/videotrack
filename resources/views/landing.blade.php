@@ -87,11 +87,11 @@
     <div class="feat"><div class="i">🔗</div><h3>Tutorial links</h3>
       <p>Attach the finished video or article to each topic so nothing gets lost.</p></div>
     <div class="feat"><div class="i">👥</div><h3>Team assignments</h3>
-      <p>Give every topic an owner. Employees see only what's assigned to them.</p></div>
+      <p>Give every topic an owner. Creators see only what's assigned to them.</p></div>
     <div class="feat"><div class="i">💰</div><h3>Per-channel pay rates</h3>
-      <p>Set what each channel pays each employee per completed topic. Earnings add up automatically.</p></div>
+      <p>Set what each channel pays each creator per completed topic. Earnings add up automatically.</p></div>
     <div class="feat"><div class="i">🛠️</div><h3>Admin panel</h3>
-      <p>Add, edit, categorise and delete topics, and manage employees, rates and passwords.</p></div>
+      <p>Add, edit, categorise and delete topics, and manage creators, rates and passwords.</p></div>
   </section>
 
   <h2 class="sec">Your channels</h2>
@@ -103,14 +103,14 @@
 
   <h2 class="sec">How it works</h2>
   <section class="steps">
-    <div class="step"><h3>Admin sets up</h3><p>Add topics, create employee accounts and set pay rates per channel.</p></div>
-    <div class="step"><h3>Employees work</h3><p>Each employee signs in, sees their assigned topics and marks them done.</p></div>
+    <div class="step"><h3>Admin sets up</h3><p>Add topics, create creator accounts and set pay rates per channel.</p></div>
+    <div class="step"><h3>Creators work</h3><p>Each creator signs in, sees their assigned topics and marks them done.</p></div>
     <div class="step"><h3>Everyone sees progress</h3><p>The tracker and earnings update the moment a topic is completed.</p></div>
   </section>
 
   <section class="final">
     <h2>Ready to get started?</h2>
-    <p>Admins and employees use the same sign-in page.</p>
+    <p>Admins and creators use the same sign-in page.</p>
     <a class="btn" href="{{ route('login') }}">Sign in →</a>
   </section>
 

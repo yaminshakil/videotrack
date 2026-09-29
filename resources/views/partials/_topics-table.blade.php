@@ -111,7 +111,7 @@
                       {{ $t->employee?->name ?? '—' }}
                     </span>
                   @elseif ($employees->isNotEmpty())
-                    <select class="emp" title="Assign to employee"
+                    <select class="emp" title="Assign to creator"
                             wire:change="assign({{ $t->id }}, $event.target.value)">
                       <option value="0">— unassigned —</option>
                       @foreach ($employees as $e)
@@ -119,7 +119,7 @@
                       @endforeach
                     </select>
                   @else
-                    <span class="t-sub">No employees yet.</span>
+                    <span class="t-sub">No creators yet.</span>
                   @endif
                 @else
                   <span class="t-assignee{{ $t->assigned_to ? ' set' : '' }}">{{ $t->employee?->name ?? 'Unassigned' }}</span>

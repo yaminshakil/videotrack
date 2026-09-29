@@ -21,7 +21,7 @@ class UniqueLoginUsername implements ValidationRule
     private const TABLES = [
         'admins' => 'the admin account',
         'managers' => 'a manager',
-        'employees' => 'an employee',
+        'employees' => 'a creator',
     ];
 
     /**

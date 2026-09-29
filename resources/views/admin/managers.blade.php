@@ -55,7 +55,7 @@
   <div class="head">
     <div>
       <h1>🛡️ Managers</h1>
-      <div class="tagline">Managers add topics to the channels you give them, assign those topics to employees, and can watch what employees earn in those channels.</div>
+      <div class="tagline">Managers add topics to the channels you give them, assign those topics to creators, and can watch what creators earn in those channels.</div>
     </div>
   </div>
 
@@ -126,7 +126,7 @@
   @endif
 
   <p style="text-align:center;margin:10px 0 34px">
-    <a href="{{ route('admin.employees.index') }}" style="color:var(--accent);text-decoration:none;font-size:15px">← Manage employees &amp; rates</a>
+    <a href="{{ route('admin.employees.index') }}" style="color:var(--accent);text-decoration:none;font-size:15px">← Manage creators &amp; rates</a>
   </p>
 </div>
 @endsection

@@ -11,7 +11,7 @@
     @include('admin._topbar')
   @elseif ($employee)
     @include('employee._nav')
-    @include('admin._topbar', ['topbarName' => $employee->name, 'topbarRole' => 'Employee'])
+    @include('admin._topbar', ['topbarName' => $employee->name, 'topbarRole' => 'Creator'])
   @elseif ($manager)
     @include('manager._nav')
     @include('admin._topbar', ['topbarName' => $manager->name, 'topbarRole' => 'Manager'])
@@ -89,7 +89,7 @@
 
   <footer>
     @if ($isAdmin) Progress is saved in the database and shared across all your devices.
-    @else Read-only view — topics are completed by assigned employees from their own portal. @endif
+    @else Read-only view — topics are completed by assigned creators from their own portal. @endif
   </footer>
 </div>
 @endsection

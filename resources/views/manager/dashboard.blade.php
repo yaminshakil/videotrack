@@ -13,7 +13,7 @@
   <div class="dhead dash-head">
     <div>
       <h1>Hi, {{ $manager->name }} 👋</h1>
-      <p class="sub">Add topics to your channels, assign them to employees, and keep an eye on what they are earning.</p>
+      <p class="sub">Add topics to your channels, assign them to creators, and keep an eye on what they are earning.</p>
     </div>
     <div class="actions">
       <a href="{{ route('manager.earnings') }}" class="ghost">💰 Earnings</a>
@@ -64,7 +64,7 @@
 
   <details class="block dash-details">
     <summary>💵 Pay rates for your channels</summary>
-    <p class="rate-hint">What an employee earns for completing one topic in each channel. It is used the next time a topic is completed — earnings already recorded keep the rate they were completed at.</p>
+    <p class="rate-hint">What a creator earns for completing one topic in each channel. It is used the next time a topic is completed — earnings already recorded keep the rate they were completed at.</p>
 
     @include('partials._rate-editor', [
       'rateAction' => route('manager.rates.save'),
@@ -72,7 +72,7 @@
       'rateEmployees' => $employees,
       'rates' => $rates,
       'rateClass' => '',
-      'rateTitle' => 'Pay rate per completed topic (channel × employee)',
+      'rateTitle' => 'Pay rate per completed topic (channel × creator)',
       'rateHint' => 'Only the channels assigned to you are listed.',
     ])
   </details>

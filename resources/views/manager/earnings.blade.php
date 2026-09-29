@@ -13,7 +13,7 @@
   <div class="dhead dash-head">
     <div>
       <h1>💰 Earnings</h1>
-      <p class="sub">What employees earned, per channel you manage. Earnings are locked in when a topic is completed, so later rate changes never alter past records.</p>
+      <p class="sub">What creators earned, per channel you manage. Earnings are locked in when a topic is completed, so later rate changes never alter past records.</p>
     </div>
     <div class="actions">
       <a href="{{ route('manager.dashboard') }}" class="ghost">← Dashboard</a>
@@ -69,7 +69,7 @@
     'channels' => $managerChannels,
     'rows' => $rows,
     'rates' => $rates,
-    'matrixTitle' => 'Earned per employee, per channel',
+    'matrixTitle' => 'Earned per creator, per channel',
     'matrixHint' => 'Only the channels assigned to you are included. The small grey line under each figure is the pay rate for that channel.',
     'employeeEarningsRoute' => 'manager.employees.earnings',
   ])

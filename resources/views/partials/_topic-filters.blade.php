@@ -13,7 +13,7 @@
                                Always unfiltered by the other three — that is the
                                comparison the chooser is for.
            $statusFilter    — 'all' | 'done' | 'pending'
-           $assigneeFilter  — '' for everyone, '0' for unassigned, else an employee id
+           $assigneeFilter  — '' for everyone, '0' for unassigned, else a creator id
            $addedFilter     — '' for any time, else 'today' | '7' | '30'
            $employees       — for the assignee dropdown
 --}}

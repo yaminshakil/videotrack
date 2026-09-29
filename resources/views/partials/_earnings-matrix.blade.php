@@ -1,12 +1,12 @@
 @php use App\Support\Money; @endphp
 
-{{-- Employee x channel earnings matrix, shared by the admin and manager earnings pages.
+{{-- Creator x channel earnings matrix, shared by the admin and manager earnings pages.
      Expects $channels, $rows, and optionally $rates, $showUsername, $matrixTitle,
      $matrixHint, $employeeEarningsRoute (the name of a route taking an {employee},
-     e.g. 'admin.employees.earnings' — the employee's name links to it when given).
+     e.g. 'admin.employees.earnings' — the creator's name links to it when given).
      Each $row has: employee, cells[channel_id] => [done, earned], done, earned. --}}
 <section class="dash-block emx">
-  <h2>{{ $matrixTitle ?? 'Earnings by employee and channel' }}</h2>
+  <h2>{{ $matrixTitle ?? 'Earnings by creator and channel' }}</h2>
   @if (! empty($matrixHint))
     <p class="emx-hint">{{ $matrixHint }}</p>
   @endif
@@ -14,14 +14,14 @@
   @if ($rows->isEmpty())
     <p class="emx-empty">
       Nothing has been completed yet, so there is nothing to report. Earnings appear here as soon as an
-      employee completes a topic.
+      creator completes a topic.
     </p>
   @else
     <div class="dash-table-scroll">
       <table class="emx-table">
         <thead>
           <tr>
-            <th>Employee</th>
+            <th>Creator</th>
             @foreach ($channels as $c)
               <th class="r">{{ $c->icon }} {{ $c->name }}</th>
             @endforeach
