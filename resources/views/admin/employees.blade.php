@@ -38,9 +38,15 @@
   @media(max-width:850px){
     .grid{grid-template-columns:1fr 1fr}
     .grid button{grid-column:1/-1}
-    .assign{flex-direction:column;align-items:stretch}
-    .assign .t{flex:1 1 auto !important}
-    select.emp{width:100%}
+    /* Stacking every field of a row (checkbox, title, raw link, picker) onto its
+       own line made a 478-topic list roughly 2.5x taller on a phone than on
+       desktop. The title wraps next to its checkbox instead, the raw link (often
+       a full YouTube URL, and already secondary to the title) is dropped rather
+       than wrapped across several lines, and the picker gets its own full-width
+       line since it needs the room. */
+    .assign .t{flex:1 1 auto !important;min-width:0}
+    .assign>.muted{display:none}
+    select.emp{width:100%;flex:1 1 100%}
     .block{padding:14px}
     .etable tr:first-child{display:none}
   }
@@ -63,13 +69,13 @@
   @include('admin._messages')
 
   <!-- 1. Add / edit employees -->
-  <form class="block" method="post" action="{{ route('admin.employees.store') }}">
+  <form class="block" method="post" action="{{ route('admin.employees.store') }}" autocomplete="off">
     @csrf
     <h2>Add employee</h2>
     <div class="grid">
-      <div><label>Full name</label><input type="text" name="name" required placeholder="e.g. Rahim"></div>
-      <div><label>Username (login)</label><input type="text" name="username" required placeholder="rahim"></div>
-      <div><label>Password</label><input type="password" name="password" required></div>
+      <div><label>Full name</label><input type="text" name="name" required placeholder="e.g. Rahim" autocomplete="off"></div>
+      <div><label>Username (login)</label><input type="text" name="username" required placeholder="rahim" autocomplete="off"></div>
+      <div><label>Password</label><input type="password" name="password" required autocomplete="new-password"></div>
       <div></div>
       <button type="submit">＋ Add</button>
     </div>
@@ -88,7 +94,7 @@
             <input type="text" name="name" value="{{ $e->name }}" style="width:130px">
             <input type="text" name="username" value="{{ $e->username }}" style="width:120px">
             <label class="rowform"><input type="checkbox" name="is_active" value="1" @checked($e->is_active)> active</label>
-            <input type="password" name="password" placeholder="new password (blank = keep)" style="width:210px">
+            <input type="password" name="password" placeholder="new password (blank = keep)" style="width:210px" autocomplete="new-password">
             <span class="muted" style="font-size:12px;white-space:nowrap">✍️ {{ $e->added_topics_count }} {{ Str::plural('topic', $e->added_topics_count) }} added</span>
             <button type="submit">Save</button>
           </form>
@@ -108,29 +114,12 @@ Their earnings history AND payment records are deleted too, so you will lose the
   @endif
 
   <!-- 2. Rate matrix (channel x employee) -->
-  <form class="block" method="post" action="{{ route('admin.rates.save') }}">
-    @csrf @method('PUT')
-    <h2>Pay rate per completed topic (per channel × employee)</h2>
-    <p class="muted" style="font-size:14px">When an employee completes a topic in a channel, they earn this amount.
-       Leave 0 if no rate.</p>
-    @foreach ($channels as $c)
-      <div class="ch" style="margin-bottom:10px">
-        <div style="margin-bottom:7px"><b>{{ $c->icon }} {{ $c->name }}</b></div>
-        <div class="pills">
-          @foreach ($employees as $e)
-            @php $amt = $rates[$c->id][$e->id] ?? null; @endphp
-            <label style="display:flex;align-items:center;gap:6px;font-size:14px">
-              {{ $e->name }}
-              <input type="number" step="0.01" min="0" style="width:72px;padding:7px 9px;border-radius:9px;border:1px solid var(--border);background:var(--panel2);color:var(--text)"
-                     name="channels[{{ $c->id }}][{{ $e->id }}]"
-                     value="{{ $amt !== null ? number_format($amt, 2, '.', '') : '' }}" placeholder="0.00">
-            </label>
-          @endforeach
-        </div>
-      </div>
-    @endforeach
-    <button type="submit">💾 Save all rates</button>
-  </form>
+  @include('partials._rate-editor', [
+    'rateAction' => route('admin.rates.save'),
+    'rateChannels' => $channels,
+    'rateEmployees' => $employees,
+    'rates' => $rates,
+  ])
 
   <!-- 3. Assign topics -->
   <div class="block">

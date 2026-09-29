@@ -6,6 +6,12 @@
   --shadow:0 18px 40px rgba(30,25,60,.06);
   --ok-text:#166534;--err-text:#991b1b;
   --done-tint-bg:rgba(236,253,245,.85);--done-tint-border:rgba(31,169,113,.3);--done-tint-text:#5f9c81;
+  --flash-bg:rgba(47,111,237,.10);
+  /* How far down the viewport page content starts, once the fixed top bar has
+     claimed the top of the screen. Zero unless that bar is actually fixed. Both
+     the padding that clears it and any sticky element that has to sit below it
+     read this, so the two cannot drift apart. Set in the media query below. */
+  --shell-top:0px;
   color-scheme:light;
 }
 :root[data-theme="dark"]{
@@ -16,6 +22,7 @@
   --shadow:0 18px 40px rgba(0,0,0,.4);
   --ok-text:#4ade80;--err-text:#f87171;
   --done-tint-bg:rgba(31,169,113,.14);--done-tint-border:rgba(52,211,153,.35);--done-tint-text:#6ee7b7;
+  --flash-bg:rgba(107,147,255,.16);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -102,12 +109,14 @@ footer{text-align:center;color:var(--muted);font-size:14px;margin-top:35px}
   font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px}
 .anav-dd summary::-webkit-details-marker{display:none}
 .anav-dd summary:hover{color:#fff;background:rgba(255,255,255,.05)}
+.anav-dd summary.on{background:var(--sb-active);color:#fff}
 .anav-dd summary .arrow{margin-left:auto;font-size:12px;color:var(--sb-text);transition:transform .15s}
 .anav-dd[open] summary .arrow{transform:rotate(90deg)}
 .anav-sub{display:flex;flex-direction:column;gap:2px;padding:4px 0 2px 14px}
 .anav-sub a{padding:9px 13px;border-radius:10px;color:var(--sb-text);font-size:14.5px;font-weight:500;
   text-decoration:none;display:flex;align-items:center;gap:8px}
 .anav-sub a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.anav-sub a.on{background:var(--sb-active);color:#fff}
 .anav form{margin:0}
 .anav-theme{margin-top:auto}
 .anav button{width:100%;padding:11px 13px;border-radius:12px;font-size:14px;font-weight:600;background:transparent;border:1px solid var(--sb-border);color:var(--sb-text)}
@@ -136,6 +145,12 @@ img,svg{max-width:100%}
   .anav-theme .tt-label{display:none}
   .anav form{margin:0}
   .anav button{width:auto;border-radius:11px}
+  /* Topics is a primary section, not a filter shortcut, so it stays reachable
+     on the collapsed top bar instead of disappearing with .anav-dd above. */
+  .anav-dd-main{display:block}
+  .anav-dd-main summary{padding:8px 10px;border-radius:11px;font-size:14px}
+  .anav-dd-main .anav-sub{flex-direction:row;flex-wrap:wrap;padding:4px 0 0}
+  .anav-dd-main .anav-sub a{padding:8px 10px;border-radius:11px;font-size:14px}
 }
 @media(max-width:520px){
   h1{font-size:28px}
@@ -154,8 +169,18 @@ img,svg{max-width:100%}
 .tb-who span{display:block;font-size:13px;color:var(--muted)}
 
 @media(min-width:851px){
+  /* Desktop only. Below the breakpoint the top bar is a normal static block in
+     the flow, so there is nothing to clear and --shell-top stays 0. */
+  :root{--shell-top:104px}
   body.has-sidebar .atopbar{position:fixed;top:0;left:264px;right:0;z-index:25;margin-bottom:0}
-  body.has-sidebar .wrap,body.has-sidebar .admin-wrap,body.has-sidebar .pwrap{padding-top:104px}
+  body.has-sidebar .wrap,body.has-sidebar .admin-wrap,body.has-sidebar .pwrap{padding-top:var(--shell-top)}
+  /* The tracker's filter bar is the one thing on any page that sticks to the
+     viewport, and the top bar (z-index 25) paints over anything below z-index
+     25 — so at its old top:12px, scrolling the topic list pushed the search
+     box and the top of both dropdowns out of sight behind the header. Pin it to
+     the same offset the content already starts at, which is also where it sits
+     before the first scroll, so it does not jump. */
+  body.has-sidebar .toolbar{top:var(--shell-top)}
 }
 @media(max-width:520px){.atopbar{padding:10px 14px}.tb-date{display:none}}
 
@@ -202,7 +227,13 @@ table.rtable td.nw{white-space:nowrap}
 .btn-view{width:auto;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;font-size:14px;font-weight:700;
   background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:10px;text-decoration:none}
 .btn-view:hover{background:var(--accent);color:#fff}
-@media(max-width:900px){.stats2{grid-template-columns:1fr 1fr}}
+/* .stats2 sits on the admin/manager/employee dashboards, all behind the fixed
+   sidebar: above 850px it takes 294px plus the page's own 40px padding, so four
+   cards need (viewport - 334)px >= 900px of room, not the full viewport, to stay
+   comfortable — hence 1234px here alongside the plain 900px that already covers
+   top-bar mode, where the sidebar takes no width at all. Same reasoning as the
+   topic table's own breakpoints. */
+@media(max-width:900px),(min-width:851px) and (max-width:1234px){.stats2{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.stats2{grid-template-columns:1fr}.rcard{padding:16px}}
 
 /* ---- Dark mode toggle ---- */
@@ -216,6 +247,22 @@ table.rtable td.nw{white-space:nowrap}
 }
 .theme-toggle:hover{transform:scale(1.08)}
 @media(max-width:520px){.theme-toggle{right:16px;bottom:16px;width:46px;height:46px;font-size:19px}}
+
+/* ---- In-page toast (Livewire actions, no redirect) ---- */
+.toast-host{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:1000;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(92vw,520px)}
+.toast{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:11px 16px;
+  box-shadow:0 14px 34px rgba(20,15,50,.18);font-size:15px;font-weight:600;color:var(--text);
+  opacity:0;transform:translateY(10px);transition:opacity .22s,transform .22s}
+.toast.in{opacity:1;transform:none}
+.toast-ok{border-color:rgba(22,163,74,.5);color:var(--ok-text)}
+.toast-err{border-color:rgba(239,68,68,.5);color:var(--err-text)}
+/* an element being updated should not look clickable mid-save */
+[wire\:loading] .lw-busy{opacity:.55;pointer-events:none}
+/* the row that was just opened for editing from the Recently added strip.
+   The highlight goes on the cells: an outline on a <tr> is not painted by browsers. */
+.trow.editing-flash>td{background:var(--flash-bg)}
+.trow.editing-flash>.c-status{box-shadow:inset 3px 0 0 var(--accent)}
 
 /* ---- Employee "My Topics" / "Custom Topics" pages (shared) ---- */
 .channel{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
@@ -235,7 +282,7 @@ table.rtable td.nw{white-space:nowrap}
 .et{padding:12px 0;border-bottom:1px solid var(--border);scroll-margin-top:16px}
 .et:last-child{border-bottom:0}
 .et.flash{background:rgba(37,99,235,.06);border-radius:10px;padding-left:8px;padding-right:8px}
-.et .row1{display:flex;align-items:flex-start;gap:12px}
+.et .row1{display:flex;align-items:flex-start;gap:8px 12px;flex-wrap:wrap}
 .et .row1 form{margin:0;display:contents}
 .et input[type=checkbox]{width:20px;height:20px;margin-top:1px;accent-color:var(--done);flex:0 0 auto}
 .et input[type=checkbox]:disabled{opacity:.45;cursor:not-allowed}
@@ -274,6 +321,230 @@ table.rtable td.nw{white-space:nowrap}
 .addform button{width:auto;white-space:nowrap}
 .adderr{color:var(--err-text);font-size:14px;margin-top:8px}
 
+/* the channel / status / assignee / added filters, on the Show Topic page */
+.tfilters{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.tfilters label{display:flex;flex-direction:column;gap:4px;width:auto}
+.tfilters label span{font-size:12px;color:var(--muted);font-weight:600}
+.tfilters select{width:auto;min-width:140px;padding:8px 11px;font-size:14px;border-radius:12px}
+.tf-clear{width:auto;color:var(--muted);font-size:13px;background:none;border:1px solid var(--border);
+  border-radius:999px;padding:7px 14px;cursor:pointer;align-self:end}
+.tf-clear:hover{border-color:var(--accent);color:var(--text)}
+.tf-note{margin:0 0 14px;color:var(--muted);font-size:13px}
+@media(max-width:520px){
+  .tfilters{gap:10px}
+  .tfilters label{flex:1 1 auto;min-width:0}
+  .tfilters select{width:100%;min-width:0}
+}
+
+/* Instant topic search, shared by the admin and manager topic pages */
+.topic-search{margin:0 0 20px}
+.topic-search label{display:block;font-size:13px;color:var(--muted);margin:0 0 5px}
+.ts-controls{display:flex;gap:8px;align-items:center}
+.ts-controls input{flex:1;min-width:0;padding:11px 14px;border-radius:14px;border:1px solid var(--border);
+      background:var(--panel);color:var(--text);font-size:15px}
+.ts-controls input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.ts-controls button{width:auto;flex:0 0 auto;padding:11px 15px;font-size:15px;cursor:pointer;
+      border-radius:14px;border:1px solid var(--border);background:var(--panel2);color:var(--muted)}
+.ts-controls button:hover{color:var(--text);border-color:var(--accent)}
+.ts-meta{font-size:13px;color:var(--muted);margin-top:7px;min-height:18px}
+.topic-group{font-size:19px;margin:26px 0 8px}
+
+/* ---- Topic table (admin + manager topic pages) ---- */
+.ch-badge{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--chip-bg);color:var(--chip-text);white-space:nowrap}
+/* One section per channel: a plain heading, then that channel's own boxed table.
+   Search hides a whole section at once (the heading goes with its rows) since both
+   live under the same [data-topic-group] element. */
+.tgsection{margin-bottom:22px}
+.tgsection:last-child{margin-bottom:0}
+.tgroup-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:9px;margin:0 0 10px;padding:0 2px}
+.tgroup-head .tg-name{font-size:17px;font-weight:700}
+.tgroup-head .tg-badge{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--chip-bg);color:var(--chip-text)}
+.tgroup-head .tg-count{font-size:13px;color:var(--muted);font-weight:400}
+
+/* A bounded scroll area, not just overflow-x:auto. With no height limit the wrapper
+   would compute overflow-y to auto but never scroll, leaving the sticky header inert. */
+.tstable-wrap{overflow:auto;-webkit-overflow-scrolling:touch;max-height:min(70vh,880px);
+  overscroll-behavior:contain;
+  background:var(--panel);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow)}
+.tstable{width:100%;border-collapse:separate;border-spacing:0;font-size:15px;min-width:600px}
+.tstable thead th{position:sticky;top:0;z-index:3;height:40px;background:var(--panel2);text-align:left;
+  color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;
+  padding:0 12px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle}
+.tstable td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tstable tbody tr:last-child td{border-bottom:0}
+.tstable .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* the row under the pointer, not the whole group it happens to sit in */
+.tstable .trow{transition:background .12s}
+.tstable .trow:hover,.tstable .trow:focus-within{background:var(--panel2)}
+.tstable .trow.is-done{background:var(--done-tint-bg)}
+.tstable .trow.is-done .t-main{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted)}
+
+/* status */
+.tstable .c-status{width:46px;padding-left:14px;padding-right:0}
+.tstable .tdone{display:inline-flex;cursor:pointer;line-height:1}
+.tstable .tdone input{position:absolute;opacity:0;width:0;height:0}
+.tstable .tdone-box{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;
+  border:2px solid var(--border);background:var(--panel2);color:transparent;font-size:14px;font-weight:800;
+  transition:background .14s,border-color .14s,color .14s}
+.tstable .tdone:hover .tdone-box{border-color:var(--accent)}
+.tstable .tdone input:focus-visible + .tdone-box{outline:2px solid var(--accent);outline-offset:2px}
+.tstable .tdone input:checked + .tdone-box{background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-color:transparent;color:#fff}
+.tstable .tdone-static{font-size:16px;line-height:1}
+
+/* topic cell */
+.tstable .c-title{min-width:230px}
+.tstable .t-main{font-weight:600;font-size:15.5px;overflow-wrap:anywhere}
+.tstable .t-ext{text-decoration:none;font-size:13px;margin-left:5px;opacity:.65}
+.tstable .t-ext:hover{opacity:1}
+.tstable .t-sub{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);margin-top:3px}
+.tstable .t-cat{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:13.5px;color:var(--muted)}
+.tstable .c-cat{width:22%}
+.tstable .c-by{width:16%}
+.tstable .t-by{font-size:13.5px;color:var(--muted)}
+
+/* assignee */
+.tstable .c-assignee{width:20%}
+.tstable .t-assignee{font-size:14px;display:inline-block;padding:3px 10px;border-radius:999px;
+  background:var(--chip-bg);color:var(--chip-text);max-width:100%;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;vertical-align:middle}
+.tstable .t-assignee.set{background:rgba(22,163,74,.12);color:var(--done)}
+.tstable select.emp{width:auto;min-width:130px;max-width:100%;padding:6px 9px;border-radius:10px;
+  border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:14px}
+
+/* actions */
+.tstable .c-act{width:1%;white-space:nowrap;text-align:right;padding-right:14px}
+.tstable .c-act .btn-sm{margin-left:6px}
+.tstable-wrap>.tempty{padding:22px 14px;color:var(--muted);text-align:center}
+
+/* the open row's editor, as a full-width panel under its topic */
+.tstable .trow-edit td{padding:0;background:var(--panel2);border-bottom:2px solid var(--accent)}
+.tedit{padding:14px}
+.tedit-grid{display:grid;grid-template-columns:1.4fr 1fr 1.4fr;gap:10px}
+.tedit label{display:block;font-size:12.5px;color:var(--muted);margin:0 0 4px}
+.tedit input{width:100%;padding:9px 11px;border-radius:11px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);font-size:15px}
+.tedit input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tedit-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:11px}
+.tedit-actions .btn-sm{margin-left:0}
+/* The "showing the newest N of M" footer. It covers every channel's section at once
+   (the cut is on the combined list, not per channel), so it sits after all of them
+   rather than inside any one section's own box. */
+.tmore{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  margin-top:10px;padding:11px 14px;background:var(--panel);border:1px solid var(--border);
+  border-radius:16px;box-shadow:var(--shadow)}
+.tmore-txt{color:var(--muted);font-size:14px}
+.tmore .btn-sm{width:auto;padding:8px 14px;font-size:14px}
+@media(max-width:850px){
+  .tedit-grid{grid-template-columns:1fr}
+  .tstable-wrap{border-radius:16px;max-height:62vh}
+  .tstable td{padding:10px}
+}
+/* Plain viewport widths, but chosen to account for the admin/manager sidebar:
+   above 850px it sits fixed at 294px plus the page's own 40px padding, so the
+   table actually has (viewport - 334)px to work with there, not the full
+   viewport. Below 850px the sidebar collapses to a top bar and the table gets
+   (viewport - 28)px instead. Both breakpoints below are picked so the table
+   thins out, then switches to cards, at the same real width in either mode. */
+@media(max-width:1234px){
+  /* Six columns get thin well before the phone breakpoint. The channel heading above
+     the group already says who it belongs to, so "Added by" is the first to go.
+     (In top-bar mode this always applies — that layout never has 900px to spare
+     for the table anyway.) */
+  .tstable .c-by{display:none}
+}
+@media(max-width:728px),(min-width:851px) and (max-width:1034px){
+  /* Six columns in this little room means either sideways scrolling or dropping data,
+     so below this width each row is presented as a card. Only the presentation
+     changes: the rows stay real table rows, which is what the grouped markup, the
+     search and the morph all depend on. */
+  /* The wrap's own panel chrome gave the table its frame; a stack of cards needs
+     none of that, or every card would sit inside a second, redundant frame. */
+  .tstable-wrap{max-height:none;overflow:visible;border-radius:0;border:0;box-shadow:none;background:transparent}
+  .tstable{min-width:0}
+  /* The header row has no place in a card, so it is hidden from sight and not from
+     assistive tech. Each value carries a data-label instead, printed by its own cell.
+     display:block is explicit here, not left to be inferred from position:absolute —
+     a <thead> is display:table-header-group by default, and leaving that in place has
+     shown inconsistent hiding behavior in at least one Chromium-based browser. */
+  .tstable thead{display:block;position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .tgroup-head{padding:0 4px;margin-bottom:8px}
+  .tgroup-head .tg-name{font-size:15px}
+  /* Each topic as its own card, not a row in a flat divided list: easier to scan
+     and to tap with a thumb, and it reads as a list of things rather than a table
+     that got squeezed. */
+  .tstable .trow{display:grid;grid-template-columns:30px 1fr;column-gap:11px;row-gap:6px;align-items:start;
+    padding:14px;margin:0 0 10px;border:1px solid var(--border);border-radius:16px;background:var(--panel);box-shadow:var(--shadow)}
+  .tstable .trow td{display:block;padding:0;border:0;min-width:0}
+  .tstable .trow:hover{background:var(--panel)}
+  .tstable .trow:focus-within{background:var(--panel2)}
+  .tstable .trow.is-done{border-color:var(--done-tint-border)}
+  .tstable .c-status{grid-column:1;grid-row:1 / span 4;width:auto;padding:1px 0 0}
+  .tstable .c-title{grid-column:2;grid-row:1}
+  /* app.css and dashboard.css both load, and the shared .hide-sm rule drops these two
+     columns on a phone wherever a table is shown. A card has the room for them, and a
+     column that vanishes is worse than one that moves, so they come back here. */
+  .tstable td.hide-sm{display:flex}
+  .tstable .c-cat{grid-column:2;grid-row:2;width:auto}
+  .tstable .c-assignee{grid-column:2;grid-row:3;width:auto}
+  .tstable .c-by{grid-column:2;grid-row:4}
+  .tstable .c-act{grid-column:1 / -1;grid-row:5;display:flex;gap:8px;width:auto;padding:4px 0 0}
+  .tstable td[data-label]{display:flex;align-items:center;gap:9px;font-size:14px}
+  .tstable td[data-label]::before{content:attr(data-label);flex:0 0 82px;font-size:11.5px;
+    text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .tstable .t-cat,.tstable .t-assignee,.tstable .t-by{white-space:normal}
+  .tstable select.emp{width:100%;min-width:0;padding:9px 10px}
+  .tstable .c-act .btn-sm{flex:1 1 0;margin-left:0;padding:10px 12px}
+  .tstable .trow-edit,.tstable .trow-edit td{display:block}
+  .tstable .trow-edit{margin:-4px 0 10px}
+  .tstable .trow-edit td{border-radius:14px;overflow:hidden}
+  .tstable tbody tr:last-child{border-bottom:0}
+  .tstable-wrap>.tempty{text-align:left;padding:20px 16px;border:1px dashed var(--border);border-radius:16px;background:var(--panel)}
+}
+
+/* Pay-rate matrix, shared by the employees page and both dashboards */
+.rate-editor h2{font-size:18px;margin:0 0 4px}
+.rate-hint{color:var(--muted);font-size:14px;margin:0 0 14px;max-width:70ch}
+.ratetable{width:100%;border-collapse:collapse;font-size:15px}
+.ratetable th,.ratetable td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:left}
+.ratetable thead th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.03em;
+      border-bottom:2px solid var(--border)}
+.ratetable tbody th{font-weight:600}
+.ratetable .nw{white-space:nowrap}
+.rate-input{width:100%;min-width:74px;max-width:110px;padding:7px 9px;border-radius:9px;border:1px solid var(--border);
+      background:var(--panel2);color:var(--text);font-size:15px}
+.rate-input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.rate-editor button{margin-top:14px}
+
+/* Collapsible block used on the dashboards */.dash-details{padding:0}
+.dash-details>summary{cursor:pointer;list-style:none;padding:16px 20px;font-size:17px;font-weight:700;
+      display:flex;align-items:center;gap:8px;border-radius:22px}
+.dash-details>summary::-webkit-details-marker{display:none}
+.dash-details>summary::after{content:'▾';margin-left:auto;color:var(--muted);font-size:15px;transition:transform .15s}
+.dash-details[open]>summary::after{transform:rotate(180deg)}
+.dash-details[open]>summary{border-bottom:1px solid var(--border);border-radius:22px 22px 0 0}
+.dash-details>form{padding:18px 20px 20px}
+.dash-details>form h2{display:none}
+
+/* Employee x channel earnings matrix (admin + manager earnings pages) */
+.emx{padding:18px 20px}
+.emx h2{font-size:18px;margin:0 0 4px}
+.emx-hint{color:var(--muted);font-size:14px;margin:0 0 12px;max-width:75ch}
+.emx-empty{color:var(--muted);margin:6px 0 0}
+.emx .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.emx table{width:100%;border-collapse:collapse;font-size:15px}
+.emx th,.emx td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.emx thead th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.03em;
+      border-bottom:2px solid var(--border);white-space:nowrap}
+.emx .r{text-align:right}
+.emx-name{white-space:nowrap}
+.emx-name small{display:block;color:var(--muted);font-weight:400}
+.emx-n{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.emx-zero{color:var(--muted)}
+.emx-total td{font-weight:700;border-top:2px solid var(--border);border-bottom:0}
+
 @media(max-width:700px){
   .et .row2{margin-left:0}
   .vform{flex-direction:column}
@@ -281,3 +552,9 @@ table.rtable td.nw{white-space:nowrap}
   .addform{flex-direction:column}
   .addform button{width:100%}
 }
+
+@media(max-width:560px){
+  .ts-controls input{font-size:16px}
+  .rate-input{max-width:none}
+}
+

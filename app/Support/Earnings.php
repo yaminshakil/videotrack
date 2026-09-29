@@ -30,6 +30,22 @@ class Earnings
     }
 
     /**
+     * All four breakdowns at once, at the same cutoffs the employee's own
+     * dashboard uses — the shape every earnings-history table on the site expects.
+     *
+     * @return array{day: list, week: list, month: list, year: list}
+     */
+    public static function history(Collection $rows): array
+    {
+        return [
+            'day'   => self::breakdown($rows, 'day', 31),
+            'week'  => self::breakdown($rows, 'week', 12),
+            'month' => self::breakdown($rows, 'month', 12),
+            'year'  => self::breakdown($rows, 'year'),
+        ];
+    }
+
+    /**
      * Grouped history, newest first.
      *
      * @param  'day'|'week'|'month'|'year'  $period

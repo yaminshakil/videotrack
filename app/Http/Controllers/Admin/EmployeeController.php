@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\Employee;
 use App\Models\Manager;
-use App\Models\Rate;
 use App\Models\Topic;
+use App\Rules\NotAdminUsername;
+use App\Support\RateMatrix;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -20,10 +21,7 @@ class EmployeeController extends Controller
         $channels  = Channel::orderBy('sort_order')->orderBy('id')->get();
 
         // channel_id => employee_id => amount
-        $rates = [];
-        foreach (Rate::all() as $r) {
-            $rates[$r->channel_id][$r->employee_id] = (float) $r->amount;
-        }
+        $rates = RateMatrix::forChannels();
 
         return view('admin.employees', [
             'employees' => $employees,
@@ -37,7 +35,7 @@ class EmployeeController extends Controller
     {
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:120'],
-            'username' => ['required', 'string', 'max:60', 'unique:employees,username', Rule::notIn([config('tracker.admin_username')]), $this->notAManagerUsername()],
+            'username' => ['required', 'string', 'max:60', 'unique:employees,username', new NotAdminUsername, $this->usernameNotUsedByAManager()],
             'password' => ['required', 'string', 'min:6'],
         ], ['required' => 'Name, username and password are required.', 'password.min' => 'Password must be at least 6 characters.']);
 
@@ -50,7 +48,7 @@ class EmployeeController extends Controller
     {
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:120'],
-            'username' => ['required', 'string', 'max:60', Rule::unique('employees', 'username')->ignore($employee->id), Rule::notIn([config('tracker.admin_username')]), $this->notAManagerUsername()],
+            'username' => ['required', 'string', 'max:60', Rule::unique('employees', 'username')->ignore($employee->id), new NotAdminUsername, $this->usernameNotUsedByAManager()],
             'password' => ['nullable', 'string', 'min:6'],
         ], ['required' => 'Name and username are required.', 'password.min' => 'Password must be at least 6 characters.']);
 
@@ -77,14 +75,7 @@ class EmployeeController extends Controller
     {
         $request->validate(['channels' => ['array'], 'channels.*.*' => ['nullable', 'numeric', 'min:0']]);
 
-        foreach ((array) $request->input('channels', []) as $channelId => $byEmployee) {
-            foreach ((array) $byEmployee as $employeeId => $amount) {
-                Rate::updateOrCreate(
-                    ['channel_id' => (int) $channelId, 'employee_id' => (int) $employeeId],
-                    ['amount' => (float) $amount]
-                );
-            }
-        }
+        RateMatrix::save((array) $request->input('channels', []));
 
         return back()->with('ok', 'Rates saved.');
     }
@@ -97,16 +88,20 @@ class EmployeeController extends Controller
 
         $employeeId = (int) $request->input('employee_id', 0);
 
-        $topic->assigned_to = $employeeId > 0 && Employee::whereKey($employeeId)->exists() ? $employeeId : null;
+        $topic->assigned_to = $employeeId > 0 && Employee::whereKey($employeeId)->where('is_active', true)->exists()
+            ? $employeeId
+            : null;
         $topic->save();
 
         return back()->with('ok', 'Assignment updated.');
     }
 
-    private function notAManagerUsername(): Closure
+    /** Compared case-insensitively: the login ladder is, so a near-miss here
+     *  would let one account shadow the other. */
+    private function usernameNotUsedByAManager(): Closure
     {
         return function (string $attribute, mixed $value, $fail) {
-            if (Manager::where('username', $value)->exists()) {
+            if (Manager::whereRaw('LOWER(username) = ?', [mb_strtolower((string) $value)])->exists()) {
                 $fail('That username is already used by a manager.');
             }
         };

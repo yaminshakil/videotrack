@@ -19,7 +19,7 @@
 
   <header>
     <div>
-      <h1>🤖 AI Installation Topic Tracker</h1>
+      <h1>🤖 Video Tracker</h1>
       <p class="sub">Track topic coverage for <b>How To Windows</b>, <b>World of Linux</b>, <b>Web Tech Knowledge</b> and <b>AI Tech</b>.</p>
       <p class="sub" style="margin-top:6px">
         <a href="{{ route('home') }}" style="color:var(--muted);text-decoration:none;font-size:13px">← Home</a>
@@ -56,7 +56,7 @@
     <div class="bar"><div class="fill" id="s-fill" style="width:{{ $stats['percent'] }}%"></div></div>
   </div>
 
-  <main class="content">
+  <main class="content" data-toggle-url="{{ route('tracker.toggle', ['topic' => '__ID__']) }}">
     @if ($groups->isEmpty())
       <div class="empty">No topics match your filters.</div>
     @endif
@@ -71,7 +71,7 @@
           @foreach ($g['items'] as $t)
             <div class="topic {{ $t->is_done ? 'done' : '' }}" data-gk="{{ $g['key'] }}" id="t-{{ $t->id }}">
               <input type="checkbox" id="c-{{ $t->id }}" @checked($t->is_done)
-                     data-url="{{ route('tracker.toggle', $t) }}" onchange="toggle(this)" @disabled(! $isAdmin)>
+                     data-id="{{ $t->id }}" onchange="toggle(this)" @disabled(! $isAdmin)>
               <label for="c-{{ $t->id }}">{{ $t->title }}</label>
               @if ($t->link !== '')
                 <a class="tlink" href="{{ $t->link }}" target="_blank" rel="noopener" title="Open: {{ $t->title }}">&#x1F517;</a>
@@ -99,7 +99,7 @@
 const CSRF = document.querySelector('meta[name=csrf-token]').content;
 
 function toggle(input){
-  fetch(input.dataset.url, {
+  fetch(document.querySelector('[data-toggle-url]').dataset.toggleUrl.replace('__ID__', input.dataset.id), {
       method: 'POST',
       headers: {'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json'}
     })

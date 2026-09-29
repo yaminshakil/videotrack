@@ -26,12 +26,7 @@ class EmployeePortalController extends Controller
         return view('employee.dashboard', [
             'employee'  => $employee,
             'summary'   => Earnings::summary($ledger),
-            'history'   => [
-                'day'   => Earnings::breakdown($ledger, 'day', 31),
-                'week'  => Earnings::breakdown($ledger, 'week', 12),
-                'month' => Earnings::breakdown($ledger, 'month', 12),
-                'year'  => Earnings::breakdown($ledger, 'year'),
-            ],
+            'history'   => Earnings::history($ledger),
             'monthPick' => $this->monthPick($employee->id, (string) $request->query('month', '')),
         ]);
     }
@@ -110,10 +105,12 @@ class EmployeePortalController extends Controller
         Topic::create([
             'channel_id'  => $data['channel_id'],
             'title'       => $data['title'],
-            'category'    => 'Added by employee',
+            'category'    => Topic::categoryFor($data['title']),
             'link'        => $data['link'] ?? '',
             'assigned_to' => $employee->id,
             'added_by'    => $employee->id,
+            'added_by_label' => $employee->name,
+            'added_by_key' => 'employee:'.$employee->id,
             'sort_order'  => $sortOrder,
         ]);
 

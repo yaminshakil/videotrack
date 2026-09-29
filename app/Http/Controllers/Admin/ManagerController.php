@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\Employee;
 use App\Models\Manager;
+use App\Rules\NotAdminUsername;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -72,9 +73,9 @@ class ManagerController extends Controller
             'username' => [
                 'required', 'string', 'max:60',
                 Rule::unique('managers', 'username')->ignore($ignore),
-                Rule::notIn([config('tracker.admin_username')]),
+                new NotAdminUsername,
                 function (string $attribute, mixed $value, $fail) {
-                    if (Employee::where('username', $value)->exists()) {
+                    if (Employee::whereRaw('LOWER(username) = ?', [mb_strtolower((string) $value)])->exists()) {
                         $fail('That username is already used by an employee.');
                     }
                 },

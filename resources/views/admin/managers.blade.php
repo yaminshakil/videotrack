@@ -62,13 +62,13 @@
   @include('admin._messages')
 
   <!-- Add a manager -->
-  <form class="block" method="post" action="{{ route('admin.managers.store') }}">
+  <form class="block" method="post" action="{{ route('admin.managers.store') }}" autocomplete="off">
     @csrf
     <h2>Add manager</h2>
     <div class="grid">
-      <div><label>Full name</label><input type="text" name="name" required placeholder="e.g. Karim"></div>
-      <div><label>Username (login)</label><input type="text" name="username" required placeholder="karim"></div>
-      <div><label>Password</label><input type="password" name="password" required></div>
+      <div><label>Full name</label><input type="text" name="name" required placeholder="e.g. Karim" autocomplete="off"></div>
+      <div><label>Username (login)</label><input type="text" name="username" required placeholder="karim" autocomplete="off"></div>
+      <div><label>Password</label><input type="password" name="password" required autocomplete="new-password"></div>
       <button type="submit">＋ Add</button>
     </div>
     <h2 style="margin:18px 0 8px">Channels they can manage</h2>
@@ -95,7 +95,7 @@
               <input type="text" name="name" value="{{ $m->name }}" style="width:130px">
               <input type="text" name="username" value="{{ $m->username }}" style="width:110px">
               <label class="rowform" style="font-size:14px"><input type="checkbox" name="is_active" value="1" @checked($m->is_active)> active</label>
-              <input type="password" name="password" placeholder="new password (blank = keep)" style="width:180px">
+              <input type="password" name="password" placeholder="new password (blank = keep)" style="width:180px" autocomplete="new-password">
               <button type="submit">Save</button>
             </div>
             <div class="chips" style="margin-top:10px">

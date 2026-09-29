@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
 use App\Models\Channel;
 use App\Models\Topic;
 use Illuminate\Http\JsonResponse;
@@ -12,13 +13,25 @@ class TrackerController extends Controller
 {
     public function index(Request $request)
     {
-        $q = trim((string) $request->query('q', ''));
-        $channel = (string) $request->query('channel', 'all');
-        $status = (string) $request->query('status', 'all');
+        // All three filters are compared against or interpolated as plain strings.
+        // A hand-edited or stale bookmark can send ?q[]=… instead of ?q=…, and
+        // casting that array to a string is fatal in PHP 8 — which surfaced as a
+        // 500 on a URL the user may have had bookmarked or auto-completed. Anything
+        // that is not a scalar falls back to the "no filter" value instead.
+        $filter = function (string $key, string $default) use ($request): string {
+            $value = $request->query($key);
+
+            return is_scalar($value) ? (string) $value : $default;
+        };
+
+        $q = trim($filter('q', ''));
+        $channel = $filter('channel', 'all');
+        $status = $filter('status', 'all');
 
         $employee = Auth::guard('employee')->user();
         $manager = Auth::guard('manager')->user();
         $channelIds = $manager?->channels()->pluck('channels.id');
+        $isLegacyAdmin = ! Admin::tableExists() && $request->session()->get('tracker_admin') === true;
 
         $topics = Topic::ordered()
             ->with('channel')
@@ -30,14 +43,34 @@ class TrackerController extends Controller
             ->when($status === 'pending', fn ($query) => $query->where('topics.is_done', false))
             ->get();
 
-        // Group by channel + category (section headers).
-        $groups = $topics->groupBy(fn (Topic $t) => $t->channel_id.'|'.$t->category)
+        // Group by channel + section label (header). An employee's own self-added
+        // topics get their own section, named after them, instead of being filed
+        // under their real category — added_by is the employee FK and is only set
+        // on that path, never for admin or manager-added topics. addedByLabel()
+        // falls back to the employee relation's name when the label itself is
+        // null (a row from before added_by_label existed), so the section never
+        // renders with a blank name.
+        $label = fn (Topic $t) => $t->added_by ? $t->addedByLabel() : $t->category;
+
+        $groups = $topics->groupBy(fn (Topic $t) => $t->channel_id.'|'.$label($t))
             ->map(fn ($items, $key) => [
                 'key' => sha1($key),
                 'channel' => $items->first()->channel,
-                'category' => $items->first()->category,
+                'category' => $label($items->first()),
+                'isAddedByEmployee' => (bool) $items->first()->added_by,
                 'items' => $items,
-            ]);
+            ])
+            // Channel order stays whatever the channels themselves use; within a
+            // channel, what an employee added themselves leads, ahead of the
+            // regular category sections, so a viewer sees "what's new from the
+            // team" before wading into the full checklist.
+            ->sortBy(fn ($g) => sprintf(
+                '%05d|%d|%s',
+                $g['channel']->sort_order,
+                $g['isAddedByEmployee'] ? 0 : 1,
+                $g['category']
+            ))
+            ->values();
 
         $scope = match (true) {
             (bool) $manager => fn ($query) => $query->whereIn('channel_id', $channelIds),
@@ -55,7 +88,7 @@ class TrackerController extends Controller
             'q' => $q,
             'channel' => $channel,
             'status' => $status,
-            'isAdmin' => (bool) $request->session()->get('tracker_admin'),
+            'isAdmin' => Auth::guard('admin')->check() || $isLegacyAdmin,
             'employee' => $employee,
             'manager' => $manager,
         ]);

@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\TopicActions;
 use App\Models\Channel;
 use App\Models\Employee;
 use App\Models\Manager;
-use App\Models\Rate;
 use App\Models\Topic;
-use Carbon\Carbon;
+use App\Support\ChannelStats;
+use App\Support\Earnings;
+use App\Support\EarningsReport;
+use App\Support\Month;
+use App\Support\RateMatrix;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -23,57 +27,30 @@ class ManagerPortalController extends Controller
     public function dashboard()
     {
         $manager = $this->manager();
-        $channelIds = $this->channelIds();
+        $channels = $this->managerChannels();
 
-        $topics = Topic::whereIn('channel_id', $channelIds)->get(['channel_id', 'assigned_to', 'is_done', 'earned_amount']);
-        $byChannel = $topics->groupBy('channel_id');
-
-        $channels = $this->managerChannels()->map(function (Channel $ch) use ($byChannel) {
-            $items = $byChannel->get($ch->id, collect());
-            $done = $items->where('is_done', true);
-            $employees = $items->pluck('assigned_to')->filter()->unique()->count();
-
-            return [
-                'channel' => $ch,
-                'total' => $items->count(),
-                'done' => $done->count(),
-                'pending' => $items->count() - $done->count(),
-                'employees' => $employees,
-                'earned' => (float) $done->sum('earned_amount'),
-            ];
-        });
+        $topics = Topic::whereIn('channel_id', $this->channelIds())->get(['channel_id', 'assigned_to', 'is_done', 'earned_amount']);
 
         return view('manager.dashboard', [
             'manager' => $manager,
             'channels' => $channels,
+            'channelStats' => ChannelStats::forChannels($channels),
             'total' => $topics->count(),
             'done' => $topics->where('is_done', true)->count(),
             'earned' => (float) $topics->where('is_done', true)->sum('earned_amount'),
-        ]);
-    }
-
-    /** All topics in the manager's channels, filterable by one of their channels. */
-    public function topics(Request $request)
-    {
-        $channelId = $request->query('channel');
-        $channels = $this->managerChannels();
-
-        $topics = Topic::ordered()->with('channel', 'employee')
-            ->whereIn('topics.channel_id', $channels->pluck('id'))
-            ->when($channelId, fn ($q) => $q->where('topics.channel_id', $channelId))
-            ->get();
-
-        return view('manager.topics', [
-            'manager' => $this->manager(),
-            'channels' => $channels,
-            'topics' => $topics,
-            'channelId' => $channelId,
             'employees' => Employee::where('is_active', true)->orderBy('name')->orderBy('id')->get(),
+            'rates' => RateMatrix::forChannels($channels),
         ]);
     }
 
-    /** A manager adding a topic, only into one of their own channels. */
-    public function storeTopic(Request $request)
+    /**
+     * A manager adding a topic, only into one of their own channels. Plain-form
+     * fallback (the manager Topics page itself now posts through the Livewire
+     * component's own store()); kept in sync with TopicActions::createAssigned()
+     * rather than building the row by hand, so it cannot drift out of step on
+     * fields like added_by_key.
+     */
+    public function storeTopic(Request $request, TopicActions $actions)
     {
         $ids = $this->channelIds();
         $data = $request->validate([
@@ -81,13 +58,10 @@ class ManagerPortalController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:100'],
             'link' => ['nullable', 'url:http,https', 'max:500'],
+            'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
         ], ['channel_id.required' => 'Channel and title are required.']);
 
-        $data['category'] = trim($data['category'] ?? '') ?: 'Other';
-        $data['link'] = $data['link'] ?? '';
-        $data['sort_order'] = (int) Topic::where('channel_id', $data['channel_id'])->max('sort_order') + 10;
-
-        Topic::create($data);
+        $actions->createAssigned($data, $data['employee_id'] ?? null, $this->manager()->name);
 
         return back()->with('ok', 'Topic added.');
     }
@@ -131,7 +105,9 @@ class ManagerPortalController extends Controller
 
         $employeeId = (int) $request->input('employee_id', 0);
 
-        $topic->assigned_to = $employeeId > 0 && Employee::whereKey($employeeId)->exists() ? $employeeId : null;
+        $topic->assigned_to = $employeeId > 0 && Employee::whereKey($employeeId)->where('is_active', true)->exists()
+            ? $employeeId
+            : null;
         $topic->save();
 
         return back()->with('ok', 'Assignment updated.');
@@ -142,65 +118,64 @@ class ManagerPortalController extends Controller
     {
         $request->validate(['month' => ['nullable', 'date_format:Y-m']]);
 
-        $month = (string) $request->input('month', now()->format('Y-m'));
-        $start = Carbon::createFromFormat('!Y-m', $month)->startOfMonth();
-        $end = $start->copy()->endOfMonth();
-
+        $month = Month::resolve($request->input('month'));
         $channels = $this->managerChannels();
-        $employees = Employee::orderBy('name')->orderBy('id')->get();
 
-        $rates = Rate::whereIn('channel_id', $channels->pluck('id'))->get();
-        $completed = Topic::whereIn('channel_id', $channels->pluck('id'))
-            ->where('is_done', true)->whereNotNull('completed_by')->whereNotNull('completed_at')
-            ->get(['channel_id', 'completed_by', 'completed_at', 'earned_amount']);
-
-        $rows = $channels->map(function (Channel $ch) use ($employees, $rates, $completed, $start, $end) {
-            $channelDone = $completed->where('channel_id', $ch->id);
-
-            $staff = $employees->map(function (Employee $e) use ($ch, $rates, $channelDone, $start, $end) {
-                $rate = (float) ($rates->first(fn ($r) => $r->employee_id === $e->id && $r->channel_id === $ch->id)?->amount ?? 0);
-                $earned = $channelDone->where('completed_by', $e->id);
-
-                return [
-                    'employee' => $e,
-                    'rate' => $rate,
-                    'done' => $earned->count(),
-                    'earned' => (float) $earned->sum('earned_amount'),
-                    'done_month' => $earned->filter(fn ($t) => $t->completed_at->between($start, $end))->count(),
-                    'earned_month' => (float) $earned->filter(fn ($t) => $t->completed_at->between($start, $end))->sum('earned_amount'),
-                ];
-            })->reject(fn ($s) => $s['done'] === 0 && $s['rate'] == 0)->values();
-
-            $inMonth = $channelDone->filter(fn ($t) => $t->completed_at->between($start, $end));
-
-            return [
-                'channel' => $ch,
-                'staff' => $staff,
-                'done' => $channelDone->count(),
-                'earned' => (float) $channelDone->sum('earned_amount'),
-                'done_month' => $inMonth->count(),
-                'earned_month' => (float) $inMonth->sum('earned_amount'),
-            ];
-        });
-
-        $monthDone = $completed->filter(fn ($t) => $t->completed_at->between($start, $end));
-        $monthEarned = (float) $monthDone->sum('earned_amount');
+        $report = EarningsReport::build($channels, $month);
 
         return view('manager.earnings', [
             'manager' => $this->manager(),
             'month' => $month,
-            'start' => $start,
-            'end' => $end,
-            'prevMonth' => $start->copy()->subMonthNoOverflow()->format('Y-m'),
-            'nextMonth' => $start->copy()->addMonthNoOverflow()->format('Y-m'),
+            'start' => $report['start'],
+            'end' => $report['end'],
+            'prevMonth' => $report['prevMonth'],
+            'nextMonth' => $report['nextMonth'],
             'isCurrent' => $month >= now()->format('Y-m'),
-            'rows' => $rows,
-            'earned' => (float) $completed->sum('earned_amount'),
-            'done' => $completed->count(),
-            'employees' => $employees->filter(fn ($e) => $completed->where('completed_by', $e->id)->count() > 0 || $rates->where('employee_id', $e->id)->count() > 0)->count(),
-            'monthDone' => $monthDone->count(),
-            'monthEarned' => $monthEarned,
+            'rows' => $report['rows'],
+            'managerChannels' => $channels,
+            'channelStats' => ChannelStats::forChannels($channels),
+            'rates' => RateMatrix::forChannels($channels),
+            'earned' => $report['allEarned'],
+            'done' => $report['allDone'],
+            'monthDone' => $report['periodDone'],
+            'monthEarned' => $report['periodEarned'],
         ]);
+    }
+
+    /**
+     * One employee's earnings, by day/week/month/year, scoped to the manager's own
+     * channels only — the same employee-picker lists every active employee (as it
+     * does for assigning topics), but what they earned in another manager's
+     * channel is not this manager's to see.
+     */
+    public function employeeEarnings(Employee $employee)
+    {
+        $ledger = Topic::where('completed_by', $employee->id)->where('is_done', true)
+            ->whereNotNull('completed_at')
+            ->whereIn('channel_id', $this->channelIds())
+            ->get(['id', 'completed_at', 'earned_amount']);
+
+        return view('manager.employee-earnings', [
+            'manager' => $this->manager(),
+            'employee' => $employee,
+            'summary' => Earnings::summary($ledger),
+            'history' => Earnings::history($ledger),
+        ]);
+    }
+
+    /**
+     * Pay rates for the manager's own channels.
+     *
+     * RateMatrix::save() rejects any channel id outside the manager's set, so a
+     * crafted payload cannot rewrite another channel's payroll.
+     */
+    public function saveRates(Request $request)
+    {
+        $request->validate(['channels' => ['array'], 'channels.*.*' => ['nullable', 'numeric', 'min:0']]);
+
+        RateMatrix::save((array) $request->input('channels', []), $this->managerChannels());
+
+        return back()->with('ok', 'Pay rates saved.');
     }
 
     private function manager(): Manager

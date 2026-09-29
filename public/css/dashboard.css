@@ -1,0 +1,123 @@
+/* Dashboard and earnings-page styles, shared by the admin and manager panels.
+   Loaded after app.css. Everything here is responsive by default: grids step
+   down at 1000px and 700px, wide tables scroll instead of overflowing, and the
+   less important table columns drop out on a phone. */
+
+.dash-head h1{font-size:28px;margin:0;position:relative;padding-bottom:10px;display:inline-block}
+.dash-head .sub{color:var(--muted);font-size:15px;margin:6px 0 0;max-width:70ch}
+.dash-head .actions{display:flex;gap:10px;flex-wrap:wrap}
+.dash-head .actions a{width:auto;padding:11px 18px;border-radius:12px;font-weight:700;font-size:15px;
+      text-decoration:none;white-space:nowrap}
+.dash-head .actions a.ghost{background:var(--panel);border:1px solid var(--border);color:var(--text)}
+.dash-head .actions a.solid{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.dash-head .actions a:hover{filter:brightness(1.06)}
+
+/* ---- two column content area: main list + side panel ---- */
+.dash-cols{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start;margin-bottom:20px}
+.dash-cols>.dash-main{min-width:0}
+.dash-cols>.dash-side{min-width:0;display:flex;flex-direction:column;gap:16px}
+
+.dash-block{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:18px 20px;
+      box-shadow:var(--shadow);margin-bottom:18px}
+.dash-block-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      margin-bottom:12px}
+.dash-block-head h2{font-size:18px;margin:0}
+.dash-block-hint{color:var(--muted);font-size:13.5px}
+.dash-empty{color:var(--muted);margin:4px 0 0;max-width:70ch}
+
+/* ---- per-channel cards ---- */
+.chans{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.chancard{background:var(--panel2);border:1px solid var(--border);border-radius:18px;padding:14px 16px;
+      display:flex;flex-direction:column;gap:10px;min-width:0}
+.chancard header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.chancard h3{margin:0;font-size:16.5px;min-width:0;overflow-wrap:anywhere}
+.chancard-badge{font-size:11.5px;padding:3px 9px;border-radius:999px;background:var(--chip-bg);color:var(--chip-text);
+      white-space:nowrap}
+.chancard-bar{height:7px;border-radius:999px;background:var(--border);overflow:hidden}
+.chancard-bar span{display:block;height:100%;border-radius:999px;
+      background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.chancard .nums{display:grid;grid-template-columns:1fr 1fr;gap:9px 10px}
+.chancard .n{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;min-width:0}
+.chancard .n b{display:block;font-size:18px;color:var(--text);margin-top:2px;overflow-wrap:anywhere}
+.chancard .n.earned b{color:var(--accent)}
+.chancard-warn{margin:0;font-size:12.5px;color:var(--warn);font-weight:600}
+.chancard-link{color:var(--accent);text-decoration:none;font-size:14px;font-weight:600;margin-top:auto}
+
+/* ---- recent activity table (the rtable/pill styles live in app.css) ---- */
+.dash-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.dash-table-scroll td .t-main{font-weight:600;overflow-wrap:anywhere}
+.dash-table-scroll td .t-sub{display:block;font-size:12.5px;color:var(--muted)}
+
+/* ---- summary cards (earnings pages) ---- */
+.dash-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.dash-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow)}
+.dash-card .l{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.dash-card .v{font-size:24px;font-weight:800;margin-top:4px;overflow-wrap:anywhere}
+.dash-card .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+.dash-card.due .v{color:var(--accent)}
+
+/* ---- month switcher ---- */
+.dash-monthbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.dash-monthbar .nav{display:flex;align-items:center;gap:10px}
+.dash-monthbar h2{margin:0;font-size:23px;min-width:180px;text-align:center}
+.dash-monthbar .range{color:var(--muted);font-size:14px;text-align:center}
+.dash-monthbar a.arrow{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:14px;
+      border:1px solid var(--border);color:var(--text);text-decoration:none;font-size:20px;
+      background:var(--panel);box-shadow:var(--shadow);flex:0 0 auto}
+.dash-monthbar a.arrow:hover{border-color:var(--accent)}
+.dash-monthbar a.arrow.off{opacity:.3;pointer-events:none}
+.dash-monthbar .jump{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dash-monthbar .jump input{width:auto;padding:9px 11px;font-size:15px}
+.dash-monthbar .jump button{width:auto;padding:10px 14px;font-size:15px}
+.dash-monthbar .jump a.now{color:var(--accent);text-decoration:none;font-size:15px;font-weight:600}
+.dash-monthbar .jump a.now.on{color:var(--accent2)}
+.dash-foot{text-align:center;margin:20px 0 34px}
+.dash-foot a{color:var(--accent);text-decoration:none;font-size:15px}
+
+/* ---- earnings matrix (employee x channel) ---- */
+.emx{margin-bottom:16px}
+.emx h2{font-size:18px;margin:0 0 4px}
+.emx-hint{color:var(--muted);font-size:14.5px;margin:0 0 12px;max-width:75ch}
+.emx-empty{color:var(--muted);padding:6px 0;margin:0}
+table.emx-table{width:100%;border-collapse:collapse;font-size:15px}
+table.emx-table th{text-align:left;color:var(--muted);font-weight:600;font-size:12.5px;
+      text-transform:uppercase;letter-spacing:.03em;padding:9px 10px;
+      border-bottom:2px solid var(--border);white-space:nowrap}
+table.emx-table td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.emx-table .r{text-align:right}
+table.emx-table .emx-name{white-space:nowrap;font-weight:600}
+table.emx-table .emx-name small{display:block;color:var(--muted);font-weight:400;font-size:12.5px}
+table.emx-table .emx-n{display:block;font-size:12px;color:var(--muted)}
+table.emx-table .emx-zero{color:var(--muted)}
+table.emx-table tfoot .emx-total td{font-weight:700;border-top:2px solid var(--border);border-bottom:0}
+
+/* ---- breakpoints ---- */
+@media(max-width:1000px){
+  .dash-cols{grid-template-columns:1fr}
+  .dash-cards{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:700px){
+  .dash-head h1{font-size:24px}
+  .dash-head .actions{width:100%}
+  .dash-head .actions a{flex:1 1 auto;text-align:center;padding:12px 14px}
+  .dash-block{padding:15px 14px;border-radius:18px}
+  .chans{grid-template-columns:1fr}
+  .chancard .nums{grid-template-columns:1fr 1fr}
+  .dash-cards{grid-template-columns:1fr 1fr}
+  .dash-monthbar h2{min-width:0;font-size:20px}
+  .dash-monthbar{justify-content:center}
+  .dash-monthbar .jump{width:100%;justify-content:center}
+  /* the topic title is the only column that has to survive on a phone */
+  .hide-sm{display:none}
+  table.rtable th,table.rtable td{padding:10px 8px}
+  .dash-table-scroll{margin:0 -14px;padding:0 14px}
+  .emx .dash-table-scroll{margin:0 -14px;padding:0 14px}
+  table.emx-table th,table.emx-table td{padding:8px 7px}
+  table.emx-table .emx-name{position:sticky;left:0;background:var(--panel)}
+}
+
+@media(max-width:460px){
+  .dash-cards{grid-template-columns:1fr}
+  .chancard .nums{grid-template-columns:1fr 1fr}
+}

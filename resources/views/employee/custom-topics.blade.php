@@ -76,5 +76,5 @@
 
 @push('scripts')
 <script>window.EMPLOYEE_VIDEO_PREVIEW_URL = @json(route('video.preview'));</script>
-<script src="{{ asset('js/employee-topics.js') }}"></script>
+<script src="{{ asset('js/employee-topics.js') }}?v={{ @filemtime(public_path('js/employee-topics.js')) }}"></script>
 @endpush

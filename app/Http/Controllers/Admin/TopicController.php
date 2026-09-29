@@ -2,35 +2,31 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\TopicActions;
 use App\Http\Controllers\Controller;
-use App\Models\Channel;
 use App\Models\Topic;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TopicController extends Controller
 {
-    public function index()
-    {
-        return view('admin.topics', [
-            'channels' => Channel::orderBy('sort_order')->orderBy('id')->get(),
-            'topics'   => Topic::ordered()->with('channel')->get(),
-        ]);
-    }
-
-    public function store(Request $request)
+    /**
+     * Plain-form fallback for adding a topic (the admin Topics page itself now
+     * posts through the Livewire component's own store()). Kept in sync with
+     * TopicActions::createAssigned() rather than building the row by hand, so it
+     * cannot drift out of step on fields like added_by_key.
+     */
+    public function store(Request $request, TopicActions $actions)
     {
         $data = $request->validate([
-            'channel_id' => ['required', 'exists:channels,id'],
-            'title'      => ['required', 'string', 'max:255'],
-            'category'   => ['nullable', 'string', 'max:100'],
-            'link'       => ['nullable', 'url:http,https', 'max:500'],
+            'channel_id'  => ['required', 'exists:channels,id'],
+            'title'       => ['required', 'string', 'max:255'],
+            'category'    => ['nullable', 'string', 'max:100'],
+            'link'        => ['nullable', 'url:http,https', 'max:500'],
+            'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
         ], ['channel_id.required' => 'Channel and title are required.']);
 
-        $data['category']   = trim($data['category'] ?? '') ?: 'Other';
-        $data['link']       = $data['link'] ?? '';
-        $data['sort_order'] = (int) Topic::where('channel_id', $data['channel_id'])->max('sort_order') + 10;
-
-        Topic::create($data);
+        $actions->createAssigned($data, $data['employee_id'] ?? null, Auth::guard('admin')->user()?->name);
 
         return back()->with('ok', 'Topic added.');
     }

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Sign in — AI Topic Tracker')
+@section('title', 'Sign in — Video Tracker')
 
 @push('styles')
 <style>

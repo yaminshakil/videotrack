@@ -1,5 +1,5 @@
 <nav class="anav">
-  <div class="anav-brand"><span class="mark">🤖</span> <span>Topic<b>Tracker</b></span></div>
+  <div class="anav-brand"><span class="mark">🤖</span> <span>Video<b>Tracker</b></span></div>
 
   <div class="anav-group">
     <div class="anav-label">Main</div>

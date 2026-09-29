@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'AI Topic Tracker — Plan, assign and pay for video topics')
+@section('title', 'Video Tracker — Plan, assign and pay for video topics')
 
 @push('styles')
 <style>
-  .nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:56px}
+  .nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:56px;flex-wrap:wrap}
   .brand{font-weight:800;font-size:20px}
   .nav a.btn{width:auto}
   a.btn{display:inline-block;padding:13px 22px;border-radius:11px;text-decoration:none;color:#fff;font-weight:700;
@@ -54,7 +54,7 @@
 @section('body')
 <div class="wrap">
   <nav class="nav">
-    <div class="brand">🤖 AI Topic Tracker</div>
+    <div class="brand">🤖 Video Tracker</div>
     <div style="display:flex;gap:10px">
       <a class="btn ghost" href="{{ route('tracker.index') }}">View tracker</a>
       <a class="btn" href="{{ route('login') }}">Sign in</a>
@@ -114,6 +114,6 @@
     <a class="btn" href="{{ route('login') }}">Sign in →</a>
   </section>
 
-  <footer>AI Topic Tracker</footer>
+  <footer>Video Tracker</footer>
 </div>
 @endsection

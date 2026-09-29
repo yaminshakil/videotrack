@@ -1,7 +1,11 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\AccountController;
+use App\Livewire\Admin\Dashboard as AdminDashboard;
+use App\Livewire\Admin\Topics as AdminTopics;
+use App\Livewire\Manager\Topics as ManagerTopics;
 use App\Http\Controllers\Admin\EmployeeController as AdminEmployeeController;
+use App\Http\Controllers\Admin\EarningsController as AdminEarningsController;
 use App\Http\Controllers\Admin\ManagerController as AdminManagerController;
 use App\Http\Controllers\Admin\PayrollController as AdminPayrollController;
 use App\Http\Controllers\Admin\TopicController as AdminTopicController;
@@ -39,8 +43,8 @@ Route::post('/topics/{topic}/toggle', [TrackerController::class, 'toggle'])
 
 // ---- Admin
 Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('topics', [AdminTopicController::class, 'index'])->name('topics.index');
+    Route::get('/', AdminDashboard::class)->name('dashboard');
+    Route::get('topics', AdminTopics::class)->name('topics.index');
     Route::post('topics', [AdminTopicController::class, 'store'])->name('topics.store');
     Route::put('topics/{topic}', [AdminTopicController::class, 'update'])->name('topics.update');
     Route::delete('topics/{topic}', [AdminTopicController::class, 'destroy'])->name('topics.destroy');
@@ -53,13 +57,20 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::put('rates', [AdminEmployeeController::class, 'saveRates'])->name('rates.save');
 
     Route::get('payroll', [AdminPayrollController::class, 'index'])->name('payroll');
+    Route::get('earnings', [AdminEarningsController::class, 'index'])->name('earnings');
+    Route::get('employees/{employee}/earnings', [AdminEarningsController::class, 'show'])->name('employees.earnings');
     Route::post('payroll/payments', [AdminPayrollController::class, 'store'])->name('payments.store');
     Route::delete('payments/{payment}', [AdminPayrollController::class, 'destroy'])->name('payments.destroy');
+    Route::post('payroll/bonuses', [AdminPayrollController::class, 'storeBonus'])->name('bonuses.store');
+    Route::delete('bonuses/{bonus}', [AdminPayrollController::class, 'destroyBonus'])->name('bonuses.destroy');
 
     Route::get('managers', [AdminManagerController::class, 'index'])->name('managers.index');
     Route::post('managers', [AdminManagerController::class, 'store'])->name('managers.store');
     Route::put('managers/{manager}', [AdminManagerController::class, 'update'])->name('managers.update');
     Route::delete('managers/{manager}', [AdminManagerController::class, 'destroy'])->name('managers.destroy');
+
+    Route::get('account', [AccountController::class, 'admin'])->name('account');
+    Route::put('account', [AccountController::class, 'updateAdmin'])->name('account.update');
 });
 
 // ---- YouTube title preview. Deliberately stateless (no session/cookies): it is called via AJAX while an
@@ -91,10 +102,14 @@ Route::prefix('employee')->name('employee.')->middleware(['auth:employee', 'empl
 // ---- Manager portal
 Route::prefix('manager')->name('manager.')->middleware(['auth:manager', 'manager.active'])->group(function () {
     Route::get('/', [ManagerPortalController::class, 'dashboard'])->name('dashboard');
-    Route::get('topics', [ManagerPortalController::class, 'topics'])->name('topics');
+    Route::get('topics', ManagerTopics::class)->name('topics');
     Route::post('topics', [ManagerPortalController::class, 'storeTopic'])->name('topics.store');
     Route::put('topics/{topic}', [ManagerPortalController::class, 'updateTopic'])->name('topics.update');
     Route::delete('topics/{topic}', [ManagerPortalController::class, 'destroyTopic'])->name('topics.destroy');
     Route::put('topics/{topic}/assign', [ManagerPortalController::class, 'assign'])->name('topics.assign');
     Route::get('earnings', [ManagerPortalController::class, 'earnings'])->name('earnings');
+    Route::get('employees/{employee}/earnings', [ManagerPortalController::class, 'employeeEarnings'])->name('employees.earnings');
+    Route::put('rates', [ManagerPortalController::class, 'saveRates'])->name('rates.save');
+    Route::get('account', [AccountController::class, 'manager'])->name('account');
+    Route::put('account', [AccountController::class, 'updateManager'])->name('account.update');
 });
